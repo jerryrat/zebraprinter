@@ -107,7 +107,7 @@ namespace ZebraPrinterMonitor.Forms
             this.grpMonitorControl = new GroupBox { Text = "监控控制", Location = new Point(10, 100), Size = new Size(1160, 65) };
             this.btnStartMonitoring = new Button { Text = "开始监控", Location = new Point(15, 25), Size = new Size(100, 30) };
             this.btnStopMonitoring = new Button { Text = "停止监控", Location = new Point(125, 25), Size = new Size(100, 30) };
-            this.btnPrintPreview = new Button { Text = "打印预览", Location = new Point(235, 25), Size = new Size(100, 30), BackColor = Color.FromArgb(255, 140, 0), ForeColor = Color.White };
+            this.btnPrintPreview = new Button { Text = "打印预览", Location = new Point(235, 25), Size = new Size(100, 30), BackColor = SystemColors.Control, ForeColor = SystemColors.ControlText };
             this.chkAutoPrint = new CheckBox { Text = "自动打印", Location = new Point(350, 30), Checked = true, AutoSize = true };
             this.chkEnablePrintCount = new CheckBox { Text = "启用打印次数统计", Location = new Point(470, 30), Checked = false, AutoSize = true };
             
@@ -183,7 +183,7 @@ namespace ZebraPrinterMonitor.Forms
             this.cmbPrintFormat.SelectedIndex = 0;
             
             this.cmbPrinter.SelectedIndexChanged += cmbPrinter_SelectedIndexChanged;
-            this.cmbPrintFormat.SelectedIndexChanged += cmbPrintFormat_SelectedIndexChanged;
+
             this.btnTestPrint.Click += btnTestPrint_Click;
             
             this.grpPrinterConfig.Controls.AddRange(new Control[] { lblPrinter, cmbPrinter, lblPrintFormat, cmbPrintFormat, btnTestPrint, lblPrinterStatus });
@@ -482,20 +482,7 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
-        private void cmbPrintFormat_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            if (cmbPrintFormat.SelectedItem != null)
-            {
-                var format = cmbPrintFormat.SelectedItem.ToString();
-                
-                // 更新配置
-                var config = ConfigurationManager.Config;
-                config.Printer.PrintFormat = format!;
-                ConfigurationManager.SaveConfig();
-                
-                AddLogMessage($"打印格式已更改为: {format}");
-            }
-        }
+
 
         private void btnTestPrint_Click(object? sender, EventArgs e)
         {

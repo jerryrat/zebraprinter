@@ -1,2 +1,0 @@
-E:\CODE\zibraa\csharp\release-x86-v1.1.22\appsettings.json
-E:\CODE\zibraa\csharp\release-x86-v1.1.22\ZebraPrinterMonitor.exe

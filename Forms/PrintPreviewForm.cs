@@ -27,14 +27,14 @@ namespace ZebraPrinterMonitor.Forms
             _currentRecord = record;
             _autoPrintEnabled = autoPrintEnabled;
             
-            // 更新序列号显示
+            // 更新序列号显示 - 使用emoji和简洁格式
             if (!string.IsNullOrEmpty(record.TR_SerialNum))
             {
-                lblSerialNumber.Text = $"序列号: {record.TR_SerialNum}";
+                lblSerialNumber.Text = $"🏷️ {record.TR_SerialNum}";
             }
             else
             {
-                lblSerialNumber.Text = "序列号: N/A";
+                lblSerialNumber.Text = "🏷️ N/A";
             }
 
             // 生成预览内容
@@ -66,39 +66,13 @@ namespace ZebraPrinterMonitor.Forms
 
                 var processedContent = PrintTemplateManager.ProcessTemplate(template, _currentRecord);
                 
-                // 格式化显示内容
+                // 简化显示内容 - 只显示核心打印内容
                 rtbPreviewContent.Clear();
                 
-                // 添加标题
-                rtbPreviewContent.SelectionFont = new Font("Microsoft Sans Serif", 14F, FontStyle.Bold);
-                rtbPreviewContent.SelectionColor = Color.DarkBlue;
-                rtbPreviewContent.AppendText("打印内容预览\n");
-                rtbPreviewContent.AppendText("=" + new string('=', 30) + "\n\n");
-                
-                // 添加记录信息
-                rtbPreviewContent.SelectionFont = new Font("Microsoft Sans Serif", 11F, FontStyle.Regular);
-                rtbPreviewContent.SelectionColor = Color.Black;
-                rtbPreviewContent.AppendText($"测试时间: {_currentRecord.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}\n");
-                rtbPreviewContent.AppendText($"打印次数: {_currentRecord.TR_Print ?? 0}\n");
-                rtbPreviewContent.AppendText($"当前格式: {ConfigurationManager.Config.Printer.PrintFormat}\n\n");
-                
-                // 添加分隔线
-                rtbPreviewContent.SelectionFont = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold);
-                rtbPreviewContent.SelectionColor = Color.Gray;
-                rtbPreviewContent.AppendText("打印内容:\n");
-                rtbPreviewContent.AppendText("-" + new string('-', 35) + "\n\n");
-                
-                // 添加实际打印内容
-                rtbPreviewContent.SelectionFont = new Font("Courier New", 10F, FontStyle.Regular);
-                rtbPreviewContent.SelectionColor = Color.Black;
+                // 直接显示处理后的打印内容，使用统一的字体
+                rtbPreviewContent.SelectionFont = new Font("Consolas", 11F, FontStyle.Regular);
+                rtbPreviewContent.SelectionColor = Color.FromArgb(33, 37, 41);
                 rtbPreviewContent.AppendText(processedContent);
-                
-                // 添加底部信息
-                rtbPreviewContent.AppendText("\n\n");
-                rtbPreviewContent.SelectionFont = new Font("Microsoft Sans Serif", 9F, FontStyle.Italic);
-                rtbPreviewContent.SelectionColor = Color.Gray;
-                rtbPreviewContent.AppendText($"打印机: {ConfigurationManager.Config.Printer.PrinterName}\n");
-                rtbPreviewContent.AppendText($"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 
                 // 滚动到顶部
                 rtbPreviewContent.SelectionStart = 0;
@@ -156,6 +130,27 @@ namespace ZebraPrinterMonitor.Forms
         private void btnClose_Click(object? sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void btnShowMain_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // 显示主窗口并将其置于前台
+                if (this.Owner != null)
+                {
+                    this.Owner.Show();
+                    this.Owner.WindowState = FormWindowState.Normal;
+                    this.Owner.BringToFront();
+                    this.Owner.Activate();
+                    
+                    Logger.Info("主窗口已显示并置于前台");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"显示主窗口失败: {ex.Message}", ex);
+            }
         }
 
         public void SetAutoPrintMode(bool enabled)

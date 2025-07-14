@@ -166,6 +166,7 @@ namespace ZebraPrinterMonitor.Forms
             
             // 控件事件
             chkAutoPrint.CheckedChanged += OnAutoPrintChanged;
+            cmbPrintFormat.SelectedIndexChanged += OnPrintFormatChanged;
         }
 
         private void InitializeUI()
@@ -566,6 +567,19 @@ namespace ZebraPrinterMonitor.Forms
                     txtTemplateName.Text = template.Name;
                     txtTemplateContent.Text = template.Content;
                     cmbTemplateFormat.SelectedItem = template.Format.ToString();
+                    
+                    // 保存为默认模板
+                    var config = ConfigurationManager.Config;
+                    config.Printer.DefaultTemplate = templateName!;
+                    ConfigurationManager.SaveConfig();
+                    
+                    AddLogMessage($"默认打印模板已更改为: {templateName}");
+                    
+                    // 如果预览窗口已打开，刷新预览内容
+                    if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                    {
+                        _printPreviewForm.RefreshPreview();
+                    }
                 }
             }
         }
@@ -610,6 +624,15 @@ namespace ZebraPrinterMonitor.Forms
             PrintTemplateManager.SaveTemplate(template);
             LoadTemplateList();
             AddLogMessage($"已保存模板: {template.Name}");
+            
+            // 如果保存的是当前正在使用的模板，刷新预览窗口
+            var config = ConfigurationManager.Config;
+            if (template.Name == config.Printer.DefaultTemplate && 
+                _printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+            {
+                _printPreviewForm.RefreshPreview();
+                Logger.Info($"预览窗口已刷新，模板已更新: {template.Name}");
+            }
         }
 
         private void btnPreviewTemplate_Click(object? sender, EventArgs e)
@@ -655,7 +678,22 @@ namespace ZebraPrinterMonitor.Forms
 
             if (cmbTemplateList.Items.Count > 0)
             {
-                cmbTemplateList.SelectedIndex = 0;
+                // 尝试选择配置中的默认模板
+                var config = ConfigurationManager.Config;
+                var defaultTemplate = config.Printer.DefaultTemplate;
+                
+                var defaultIndex = -1;
+                for (int i = 0; i < cmbTemplateList.Items.Count; i++)
+                {
+                    if (cmbTemplateList.Items[i].ToString() == defaultTemplate)
+                    {
+                        defaultIndex = i;
+                        break;
+                    }
+                }
+                
+                // 如果找到默认模板则选择它，否则选择第一个
+                cmbTemplateList.SelectedIndex = defaultIndex >= 0 ? defaultIndex : 0;
             }
         }
 
@@ -815,6 +853,35 @@ namespace ZebraPrinterMonitor.Forms
             catch (Exception ex)
             {
                 Logger.Error($"更新预览窗口自动打印状态失败: {ex.Message}", ex);
+            }
+        }
+
+        private void OnPrintFormatChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (cmbPrintFormat.SelectedItem != null)
+                {
+                    var format = cmbPrintFormat.SelectedItem.ToString();
+                    
+                    // 更新配置
+                    var config = ConfigurationManager.Config;
+                    config.Printer.PrintFormat = format!;
+                    ConfigurationManager.SaveConfig();
+                    
+                    AddLogMessage($"打印格式已更改为: {format}");
+                    
+                    // 如果预览窗口已打开，刷新预览内容
+                    if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                    {
+                        _printPreviewForm.RefreshPreview();
+                        Logger.Info($"预览窗口已刷新，使用新的打印格式: {format}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"更新打印格式失败: {ex.Message}", ex);
             }
         }
 

@@ -1,0 +1,2 @@
+E:\CODE\zibraa\publish-single\appsettings.json
+E:\CODE\zibraa\publish-single\ZebraPrinterMonitor.exe

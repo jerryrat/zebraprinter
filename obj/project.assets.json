@@ -921,7 +921,7 @@
     "C:\\Users\\Administrator\\.nuget\\packages\\": {}
   },
   "project": {
-    "version": "1.1.21",
+    "version": "1.1.23",
     "restore": {
       "projectUniqueName": "E:\\CODE\\zibraa\\ZebraPrinterMonitor.csproj",
       "projectName": "ZebraPrinterMonitor",
