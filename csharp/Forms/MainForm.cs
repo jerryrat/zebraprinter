@@ -175,7 +175,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.27";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.31";
             this.Size = new Size(1200, 850);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 650);
@@ -659,21 +659,21 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
-                // 打开太阳能电池板规格表模板编辑器
-                using (var editorForm = new SimpleTemplateEditorForm(_templateService))
+                // 打开可视化拖拽模板编辑器
+                using (var editorForm = new VisualTemplateEditorForm(_templateService))
                 {
                     if (editorForm.ShowDialog(this) == DialogResult.OK)
                     {
                         // 刷新模板列表
                         LoadTemplateList();
-                        Logger.Info("太阳能电池板规格表模板编辑器已关闭，模板列表已刷新");
+                        Logger.Info("可视化拖拽模板编辑器已关闭，模板列表已刷新");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"打开高级模板编辑器失败: {ex.Message}", ex);
-                MessageBox.Show($"打开高级模板编辑器失败: {ex.Message}", "错误", 
+                Logger.Error($"打开可视化模板编辑器失败: {ex.Message}", ex);
+                MessageBox.Show($"打开可视化模板编辑器失败: {ex.Message}", "错误", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -696,7 +696,7 @@ namespace ZebraPrinterMonitor.Forms
         private void UpdateUILanguage()
         {
             // 更新主窗体标题
-            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.27";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.31";
             
             // 更新选项卡标题
             if (tabControl1.TabPages.Count >= 4)

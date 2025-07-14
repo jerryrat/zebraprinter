@@ -609,9 +609,9 @@ namespace ZebraPrinterMonitor.Services
         {
             try
             {
-                var editorForm = new ZebraPrinterMonitor.Forms.SimpleTemplateEditorForm(this);
+                var editorForm = new ZebraPrinterMonitor.Forms.VisualTemplateEditorForm(this);
                 editorForm.ShowDialog();
-                Logger.Info("太阳能电池板规格表模板编辑器已打开");
+                Logger.Info("可视化拖拽模板编辑器已打开");
             }
             catch (Exception ex)
             {
