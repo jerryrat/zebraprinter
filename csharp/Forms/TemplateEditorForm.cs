@@ -47,11 +47,17 @@ namespace ZebraPrinterMonitor.Forms
             InitializeEnhancer();
             LoadTemplates();
             SetupValidationTimer();
+            
+            // 加载默认模板内容
+            LoadDefaultTemplate();
         }
 
         public TemplateEditorForm(PrintTemplate template) : this()
         {
-            LoadTemplate(template);
+            if (template != null)
+            {
+                LoadTemplate(template);
+            }
         }
 
         private void InitializeComponent()
@@ -161,6 +167,12 @@ namespace ZebraPrinterMonitor.Forms
 
             btnSaveAs = CreateButton("另存为", x, y, btnSaveAs_Click);
             x += 80;
+
+            // FastReport按钮
+            var btnFastReport = CreateButton("报表预览", x, y, btnFastReport_Click);
+            btnFastReport.BackColor = System.Drawing.Color.LightGreen;
+            btnFastReport.Size = new System.Drawing.Size(100, 25);
+            x += 110;
 
             // 分隔线
             x += 20;
@@ -374,6 +386,76 @@ namespace ZebraPrinterMonitor.Forms
             if (cmbTemplates.Items.Count > 0)
             {
                 cmbTemplates.SelectedIndex = 0;
+            }
+        }
+
+        private void LoadDefaultTemplate()
+        {
+            try
+            {
+                // 如果没有当前模板，加载默认模板
+                if (_currentTemplate == null)
+                {
+                    var defaultTemplate = PrintTemplateManager.GetDefaultTemplate();
+                    if (defaultTemplate != null)
+                    {
+                        LoadTemplate(defaultTemplate);
+                        UpdateStatus("已加载默认模板");
+                    }
+                    else
+                    {
+                        // 创建一个示例模板
+                        CreateSampleTemplate();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"加载默认模板失败: {ex.Message}", ex);
+                CreateSampleTemplate();
+            }
+        }
+
+        private void CreateSampleTemplate()
+        {
+            try
+            {
+                var sampleTemplate = new PrintTemplate
+                {
+                    Name = "示例模板",
+                    Content = @"================================================
+                   太阳能电池测试标签
+================================================
+
+序列号: {SerialNumber}
+测试时间: {TestDateTime}
+
+======== 电气参数 ========
+短路电流 (Isc): {Current} A
+最大功率电流 (Imp): {CurrentImp} A
+开路电压 (Voc): {Voltage} V
+最大功率电压 (Vmp): {VoltageVpm} V
+最大功率 (Pm): {Power} W
+
+======== 打印信息 ========
+打印时间: {CurrentTime}
+打印次数: {PrintCount}
+
+================================================
+标准测试条件: 1000W/m², AM1.5, 25°C
+================================================",
+                    Format = PrintFormat.Text,
+                    IsDefault = false
+                };
+
+                LoadTemplate(sampleTemplate);
+                UpdateStatus("已创建示例模板，请根据需要修改");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"创建示例模板失败: {ex.Message}", ex);
+                rtbEditor.Text = "// 在此编辑您的打印模板\n// 可用变量请参考左侧列表\n\n序列号: {SerialNumber}\n测试时间: {TestDateTime}";
+                UpdateStatus("已加载空白模板");
             }
         }
 
@@ -608,6 +690,33 @@ namespace ZebraPrinterMonitor.Forms
         private void btnValidate_Click(object sender, EventArgs e)
         {
             ValidateTemplate();
+        }
+
+        private void btnFastReport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var fastReportService = new FastReportService();
+                
+                // 显示功能说明
+                fastReportService.ShowTemplateInfo(this);
+                
+                // 如果有选中的记录，使用实际数据预览报表
+                if (_currentTemplate != null)
+                {
+                    var sampleRecord = CreateSampleTestRecord();
+                    fastReportService.PreviewReport(sampleRecord);
+                }
+                
+                UpdateStatus("FastReport 报表功能已展示");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"打开FastReport功能失败: {ex.Message}", ex);
+                MessageBox.Show($"打开报表功能失败: {ex.Message}\n\n注意：当前使用的是FastReport.OpenSource开源版本，" +
+                    "不包含可视化设计器。如需完整设计功能，请考虑升级到商业版本。", 
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         #endregion
