@@ -26,7 +26,7 @@ namespace ZebraPrinterMonitor.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "太阳能电池板规格表模板编辑器 v1.1.30";
+            this.Text = "太阳能电池板规格表模板编辑器 v1.1.31";
             this.Size = new Size(800, 600);
             this.StartPosition = FormStartPosition.CenterParent;
             this.MaximizeBox = true;
