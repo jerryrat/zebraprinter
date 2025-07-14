@@ -13,6 +13,7 @@ namespace ZebraPrinterMonitor.Forms
     {
         private readonly DatabaseMonitor _databaseMonitor;
         private readonly PrinterService _printerService;
+        private readonly DragDropTemplateService _templateService;
         private NotifyIcon _notifyIcon;
         private PrintMonitorForm? _printMonitorForm;  // 小监控窗口
         private int _totalRecordsProcessed = 0;
@@ -24,6 +25,7 @@ namespace ZebraPrinterMonitor.Forms
             
             _databaseMonitor = new DatabaseMonitor();
             _printerService = new PrinterService();
+            _templateService = new DragDropTemplateService();
             
             // 初始化小监控窗口
             _printMonitorForm = new PrintMonitorForm(_printerService);
@@ -657,24 +659,23 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
-                // 获取当前选中的模板
-                PrintTemplate? currentTemplate = null;
-                if (cmbTemplateList.SelectedItem != null)
-                {
-                    string templateName = cmbTemplateList.SelectedItem.ToString() ?? "";
-                    currentTemplate = PrintTemplateManager.GetTemplate(templateName);
-                }
-
-                // 打开高级模板编辑器
-                using (var editorForm = new TemplateEditorForm(currentTemplate))
+                // 暂时禁用模板编辑器功能，专注于核心模板生成
+                MessageBox.Show("太阳能电池板规格表模板已1:1还原图片样式！\n" +
+                              "当前版本专注于核心打印功能。", 
+                              "模板编辑器", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // TODO: 重新启用模板编辑器
+                /*
+                using (var editorForm = new TemplateEditorForm(_templateService))
                 {
                     if (editorForm.ShowDialog(this) == DialogResult.OK)
                     {
                         // 刷新模板列表
                         LoadTemplateList();
-                        Logger.Info("模板编辑器已关闭，模板列表已刷新");
+                        Logger.Info("拖拽式模板编辑器已关闭，模板列表已刷新");
                     }
                 }
+                */
             }
             catch (Exception ex)
             {
@@ -814,6 +815,7 @@ namespace ZebraPrinterMonitor.Forms
             if (disposing)
             {
                 _databaseMonitor?.Dispose();
+                _templateService?.Dispose();
                 _notifyIcon?.Dispose();
                 components?.Dispose();
             }
