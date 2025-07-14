@@ -172,7 +172,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.25";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.26";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -669,6 +669,25 @@ namespace ZebraPrinterMonitor.Forms
                     LoadTemplateList();
                     AddLogMessage($"已删除模板: {templateName}");
                 }
+            }
+        }
+
+        private void btnVisualDesigner_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                var designerForm = new TemplateDesignerForm();
+                if (designerForm.ShowDialog() == DialogResult.OK)
+                {
+                    // 刷新模板列表
+                    LoadTemplateList();
+                    AddLogMessage("模板设计器已保存新模板");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"打开模板设计器失败: {ex.Message}", ex);
+                MessageBox.Show($"打开模板设计器失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

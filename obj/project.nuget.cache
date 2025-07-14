@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "Rae1WockgFsXSTAdJDviWGr0jybLxFmVzG1JwesCiac/fz4t+kRgNPOqJoJ0HwgMH4WHKe1eygnfVCuYaEhnkw==",
+  "dgSpecHash": "x8Ba8zLCx7mDvuX6f2TQVsapu57KiFWrfXKC7afZJTMtQJu12CaqYtTH+dqQv7ymTuVrfWrafl2c00HMjZoVmg==",
   "success": true,
   "projectFilePath": "E:\\CODE\\zibraa\\ZebraPrinterMonitor.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.net.illink.tasks\\8.0.1\\microsoft.net.illink.tasks.8.0.1.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.visualbasic\\10.3.0\\microsoft.visualbasic.10.3.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.win32.systemevents\\7.0.0\\microsoft.win32.systemevents.7.0.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\system.codedom\\9.0.7\\system.codedom.9.0.7.nupkg.sha512",

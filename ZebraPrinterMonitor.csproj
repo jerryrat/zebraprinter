@@ -3,9 +3,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyVersion>1.1.25</AssemblyVersion>
-    <FileVersion>1.1.25</FileVersion>
-    <Version>1.1.25</Version>
+    <AssemblyVersion>1.1.26</AssemblyVersion>
+    <FileVersion>1.1.26</FileVersion>
+    <Version>1.1.26</Version>
     <Copyright>© 2025 Zebra Printer Monitor</Copyright>
     <Description>太阳能电池测试数据监控和打印系统</Description>
     <Product>Zebra Printer Monitor</Product>
@@ -27,6 +27,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     <PackageReference Include="System.Management" Version="9.0.7" />
+    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
   </ItemGroup>
 
   <ItemGroup>

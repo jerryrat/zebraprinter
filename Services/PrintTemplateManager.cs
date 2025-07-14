@@ -178,18 +178,56 @@ namespace ZebraPrinterMonitor.Services
                 new PrintTemplate
                 {
                     Name = "默认文本模板",
-                    Content = @"===== 太阳能电池测试报告 =====
-序列号: {SerialNumber}
-测试时间: {TestDateTime}
-电流: {Current} A
-电压: {Voltage} V
-Vpm电压: {VoltageVpm} V
-功率: {Power} W
-打印次数: {PrintCount}
-打印时间: {CurrentTime}
-================================",
+                    Content = @"Module Type:                           {SerialNumber}
+Maximum Power(Pm):                              {Power}W
+Open Circuit Voltage(Voc):                   {Voltage}V
+Short Circuit Current(Isc):                  {Current}A
+Maximum Power Voltage(Vm):                {VoltageVpm}V
+Maximum Power Current(Im):                    {Current}A
+Weight:                                      -- kg
+Dimensions:                          ----×----×----
+─────────────────────────────────────────────────
+Series Fuse Rating:                           15A
+Tolerance of Pm:                           0~+5W
+Measuring uncertainty of Pm:                  ±3%
+Tolerance of Voc:                             ±3%
+Tolerance of Isc:                             ±3%
+Standard Test Conditions:        1000W/m², 25°C, AM1.5
+Produced in accordance with:  IEC 61215:2016 & IEC 61730:2016
+Fire Rating/Module Fire Performance:      Class C
+MAX.System Voltage:                        1000V
+Module Protection:                       Class II
+─────────────────────────────────────────────────
+Test Date: {TestDateTime}
+Print Count: {PrintCount}
+Print Time: {CurrentTime}",
                     Format = PrintFormat.Text,
                     IsDefault = true
+                },
+                new PrintTemplate
+                {
+                    Name = "专业太阳能电池标签",
+                    Content = @"Module Type:                           {SerialNumber}
+Maximum Power(Pm):                              {Power}W
+Open Circuit Voltage(Voc):                   {Voltage}V
+Short Circuit Current(Isc):                  {Current}A
+Maximum Power Voltage(Vm):                {VoltageVpm}V
+Maximum Power Current(Im):                    {Current}A
+Weight:                                      -- kg
+Dimensions:                          ----×----×----
+─────────────────────────────────────────────────
+Series Fuse Rating:                           15A
+Tolerance of Pm:                           0~+5W
+Measuring uncertainty of Pm:                  ±3%
+Tolerance of Voc:                             ±3%
+Tolerance of Isc:                             ±3%
+Standard Test Conditions:        1000W/m², 25°C, AM1.5
+Produced in accordance with:  IEC 61215:2016 & IEC 61730:2016
+Fire Rating/Module Fire Performance:      Class C
+MAX.System Voltage:                        1000V
+Module Protection:                       Class II",
+                    Format = PrintFormat.Text,
+                    IsDefault = false
                 },
                 new PrintTemplate
                 {

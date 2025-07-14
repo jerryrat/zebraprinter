@@ -31,7 +31,7 @@ namespace ZebraPrinterMonitor.Forms
         private Label lblTemplateName, lblTemplateContent, lblTemplateFormat, lblAvailableFields;
         private TextBox txtTemplateName, txtTemplateContent;
         private ComboBox cmbTemplateFormat, cmbTemplateList;
-        private Button btnSaveTemplate, btnDeleteTemplate, btnPreviewTemplate, btnNewTemplate;
+        private Button btnSaveTemplate, btnDeleteTemplate, btnPreviewTemplate, btnNewTemplate, btnVisualDesigner;
         private ListBox lstAvailableFields;
         private RichTextBox rtbTemplatePreview;
 
@@ -224,12 +224,14 @@ namespace ZebraPrinterMonitor.Forms
             this.cmbTemplateList = new ComboBox { Location = new Point(15, 30), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             this.btnNewTemplate = new Button { Text = "新建模板", Location = new Point(15, 70), Size = new Size(80, 30) };
             this.btnDeleteTemplate = new Button { Text = "删除模板", Location = new Point(110, 70), Size = new Size(80, 30) };
+            this.btnVisualDesigner = new Button { Text = "可视化设计器", Location = new Point(15, 110), Size = new Size(180, 30) };
             
             this.cmbTemplateList.SelectedIndexChanged += cmbTemplateList_SelectedIndexChanged;
             this.btnNewTemplate.Click += btnNewTemplate_Click;
             this.btnDeleteTemplate.Click += btnDeleteTemplate_Click;
+            this.btnVisualDesigner.Click += btnVisualDesigner_Click;
             
-            this.grpTemplateList.Controls.AddRange(new Control[] { cmbTemplateList, btnNewTemplate, btnDeleteTemplate });
+            this.grpTemplateList.Controls.AddRange(new Control[] { cmbTemplateList, btnNewTemplate, btnDeleteTemplate, btnVisualDesigner });
             
             // 模板编辑器组
             this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(320, 10), Size = new Size(550, 350) };
