@@ -609,12 +609,9 @@ namespace ZebraPrinterMonitor.Services
         {
             try
             {
-                // 暂时禁用模板编辑器，专注于核心模板功能
-                Logger.Info("太阳能电池板规格表模板已1:1还原图片样式");
-                
-                // TODO: 重新启用模板编辑器
-                // var editorForm = new TemplateEditorForm(this);
-                // editorForm.ShowDialog();
+                var editorForm = new ZebraPrinterMonitor.Forms.SimpleTemplateEditorForm(this);
+                editorForm.ShowDialog();
+                Logger.Info("太阳能电池板规格表模板编辑器已打开");
             }
             catch (Exception ex)
             {

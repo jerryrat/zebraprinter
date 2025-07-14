@@ -1,0 +1,810 @@
+{
+  "Name": "SolarCellTest",
+  "Description": "太阳能电池测试打印模板",
+  "PageWidth": 210,
+  "PageHeight": 297,
+  "Elements": [
+    {
+      "Id": "mainTitle",
+      "Type": "text",
+      "X": 10,
+      "Y": 5,
+      "Width": 350,
+      "Height": 20,
+      "Content": "SKT 600 M12/120HB",
+      "Properties": {
+        "fontSize": 18,
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "fontFamily": "Arial",
+        "backgroundColor": "#f5f5f5"
+      }
+    },
+    {
+      "Id": "tableBorder",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 25,
+      "Width": 350,
+      "Height": 220,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 2,
+        "strokeColor": "#000000",
+        "fillColor": "transparent"
+      }
+    },
+    {
+      "Id": "rowBg_0",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 30,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_0",
+      "Type": "text",
+      "X": 15,
+      "Y": 32,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Model Type",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_0",
+      "Type": "text",
+      "X": 255,
+      "Y": 32,
+      "Width": 100,
+      "Height": 13,
+      "Content": "SKT 600 M12/120HB",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_0",
+      "Type": "line",
+      "X": 10,
+      "Y": 47,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_1",
+      "Type": "text",
+      "X": 15,
+      "Y": 49,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Rated Maximum Power",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "unit_1",
+      "Type": "text",
+      "X": 200,
+      "Y": 49,
+      "Width": 50,
+      "Height": 13,
+      "Content": "(Pmax)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_1",
+      "Type": "text",
+      "X": 255,
+      "Y": 49,
+      "Width": 100,
+      "Height": 13,
+      "Content": "600 W",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_1",
+      "Type": "line",
+      "X": 10,
+      "Y": 64,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_2",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 64,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_2",
+      "Type": "text",
+      "X": 15,
+      "Y": 66,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Power Sorting",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_2",
+      "Type": "text",
+      "X": 255,
+      "Y": 66,
+      "Width": 100,
+      "Height": 13,
+      "Content": "0~+5W",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_2",
+      "Type": "line",
+      "X": 10,
+      "Y": 81,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_3",
+      "Type": "text",
+      "X": 15,
+      "Y": 83,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Voltage at Pmax",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "unit_3",
+      "Type": "text",
+      "X": 200,
+      "Y": 83,
+      "Width": 50,
+      "Height": 13,
+      "Content": "(Vmp)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_3",
+      "Type": "text",
+      "X": 255,
+      "Y": 83,
+      "Width": 100,
+      "Height": 13,
+      "Content": "34.60 V",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_3",
+      "Type": "line",
+      "X": 10,
+      "Y": 98,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_4",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 98,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_4",
+      "Type": "text",
+      "X": 15,
+      "Y": 100,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Current at Pmax",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "unit_4",
+      "Type": "text",
+      "X": 200,
+      "Y": 100,
+      "Width": 50,
+      "Height": 13,
+      "Content": "(Imp)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_4",
+      "Type": "text",
+      "X": 255,
+      "Y": 100,
+      "Width": 100,
+      "Height": 13,
+      "Content": "17.34 A",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_4",
+      "Type": "line",
+      "X": 10,
+      "Y": 115,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_5",
+      "Type": "text",
+      "X": 15,
+      "Y": 117,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Open-Circuit Voltage",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "unit_5",
+      "Type": "text",
+      "X": 200,
+      "Y": 117,
+      "Width": 50,
+      "Height": 13,
+      "Content": "(Voc)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_5",
+      "Type": "text",
+      "X": 255,
+      "Y": 117,
+      "Width": 100,
+      "Height": 13,
+      "Content": "41.70 V",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_5",
+      "Type": "line",
+      "X": 10,
+      "Y": 132,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_6",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 132,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_6",
+      "Type": "text",
+      "X": 15,
+      "Y": 134,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Short-Circuit Current",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "unit_6",
+      "Type": "text",
+      "X": 200,
+      "Y": 134,
+      "Width": 50,
+      "Height": 13,
+      "Content": "(Isc)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_6",
+      "Type": "text",
+      "X": 255,
+      "Y": 134,
+      "Width": 100,
+      "Height": 13,
+      "Content": "18.42 A",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_6",
+      "Type": "line",
+      "X": 10,
+      "Y": 149,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_7",
+      "Type": "text",
+      "X": 15,
+      "Y": 151,
+      "Width": 180,
+      "Height": 13,
+      "Content": "PV Module Classification",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_7",
+      "Type": "text",
+      "X": 255,
+      "Y": 151,
+      "Width": 100,
+      "Height": 13,
+      "Content": "CLASS II",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_7",
+      "Type": "line",
+      "X": 10,
+      "Y": 166,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_8",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 166,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_8",
+      "Type": "text",
+      "X": 15,
+      "Y": 168,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Maximum System Voltage",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_8",
+      "Type": "text",
+      "X": 255,
+      "Y": 168,
+      "Width": 100,
+      "Height": 13,
+      "Content": "1500 V",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_8",
+      "Type": "line",
+      "X": 10,
+      "Y": 183,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_9",
+      "Type": "text",
+      "X": 15,
+      "Y": 185,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Maximum Series Fuse Rating",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_9",
+      "Type": "text",
+      "X": 255,
+      "Y": 185,
+      "Width": 100,
+      "Height": 13,
+      "Content": "35 A",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_9",
+      "Type": "line",
+      "X": 10,
+      "Y": 200,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_10",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 200,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_10",
+      "Type": "text",
+      "X": 15,
+      "Y": 202,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Operating Temperature",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_10",
+      "Type": "text",
+      "X": 255,
+      "Y": 202,
+      "Width": 100,
+      "Height": 13,
+      "Content": "-40~85°C",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_10",
+      "Type": "line",
+      "X": 10,
+      "Y": 217,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "label_11",
+      "Type": "text",
+      "X": 15,
+      "Y": 219,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Dimensions(mm)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_11",
+      "Type": "text",
+      "X": 255,
+      "Y": 219,
+      "Width": 100,
+      "Height": 13,
+      "Content": "2172x1303x40(mm)",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_11",
+      "Type": "line",
+      "X": 10,
+      "Y": 234,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "rowBg_12",
+      "Type": "rectangle",
+      "X": 10,
+      "Y": 234,
+      "Width": 350,
+      "Height": 17,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#f9f9f9",
+        "strokeWidth": 0
+      }
+    },
+    {
+      "Id": "label_12",
+      "Type": "text",
+      "X": 15,
+      "Y": 236,
+      "Width": 180,
+      "Height": 13,
+      "Content": "Pmax/Voc/Isc Tolerance",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "value_12",
+      "Type": "text",
+      "X": 255,
+      "Y": 236,
+      "Width": 100,
+      "Height": 13,
+      "Content": "±3%",
+      "Properties": {
+        "fontSize": 11,
+        "fontFamily": "Arial",
+        "textAlign": "right",
+        "fontWeight": "normal"
+      }
+    },
+    {
+      "Id": "rowLine_12",
+      "Type": "line",
+      "X": 10,
+      "Y": 251,
+      "Width": 350,
+      "Height": 1,
+      "Content": "",
+      "Properties": {
+        "strokeWidth": 1,
+        "strokeColor": "#cccccc"
+      }
+    },
+    {
+      "Id": "testConditions",
+      "Type": "text",
+      "X": 10,
+      "Y": 255,
+      "Width": 350,
+      "Height": 15,
+      "Content": "Tested at STC:1000W/m² ; AM1.5 ; Cell temperature 25°C",
+      "Properties": {
+        "fontSize": 10,
+        "fontFamily": "Arial",
+        "textAlign": "left",
+        "fontWeight": "normal",
+        "backgroundColor": "#f0f0f0"
+      }
+    },
+    {
+      "Id": "qrCodeArea",
+      "Type": "rectangle",
+      "X": 370,
+      "Y": 50,
+      "Width": 60,
+      "Height": 120,
+      "Content": "",
+      "Properties": {
+        "fillColor": "#000000",
+        "strokeWidth": 1,
+        "strokeColor": "#000000"
+      }
+    },
+    {
+      "Id": "qrCodeText",
+      "Type": "text",
+      "X": 370,
+      "Y": 175,
+      "Width": 60,
+      "Height": 10,
+      "Content": "QR Code",
+      "Properties": {
+        "fontSize": 8,
+        "fontFamily": "Arial",
+        "textAlign": "center",
+        "color": "#666666"
+      }
+    }
+  ],
+  "CreatedDate": "2025-07-15T00:04:52.3478101+08:00",
+  "ModifiedDate": "2025-07-15T00:04:52.3478728+08:00"
+}

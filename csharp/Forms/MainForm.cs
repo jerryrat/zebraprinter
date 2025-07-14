@@ -659,23 +659,16 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
-                // 暂时禁用模板编辑器功能，专注于核心模板生成
-                MessageBox.Show("太阳能电池板规格表模板已1:1还原图片样式！\n" +
-                              "当前版本专注于核心打印功能。", 
-                              "模板编辑器", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
-                // TODO: 重新启用模板编辑器
-                /*
-                using (var editorForm = new TemplateEditorForm(_templateService))
+                // 打开太阳能电池板规格表模板编辑器
+                using (var editorForm = new SimpleTemplateEditorForm(_templateService))
                 {
                     if (editorForm.ShowDialog(this) == DialogResult.OK)
                     {
                         // 刷新模板列表
                         LoadTemplateList();
-                        Logger.Info("拖拽式模板编辑器已关闭，模板列表已刷新");
+                        Logger.Info("太阳能电池板规格表模板编辑器已关闭，模板列表已刷新");
                     }
                 }
-                */
             }
             catch (Exception ex)
             {
