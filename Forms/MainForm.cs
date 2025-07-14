@@ -172,7 +172,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.22";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.24";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -199,6 +199,42 @@ namespace ZebraPrinterMonitor.Forms
             if (!string.IsNullOrEmpty(config.Printer.PrinterName))
             {
                 // 在UpdatePrinterList后会自动选择
+            }
+
+            // 设置打印格式（临时禁用事件处理器避免重复保存）
+            cmbPrintFormat.SelectedIndexChanged -= OnPrintFormatChanged;
+            try
+            {
+                if (!string.IsNullOrEmpty(config.Printer.PrintFormat))
+                {
+                    var formatIndex = cmbPrintFormat.Items.IndexOf(config.Printer.PrintFormat);
+                    if (formatIndex >= 0)
+                    {
+                        cmbPrintFormat.SelectedIndex = formatIndex;
+                        Logger.Info($"已加载打印格式配置: {config.Printer.PrintFormat}");
+                    }
+                    else
+                    {
+                        // 如果配置中的格式不在列表中，设置为默认值并更新配置
+                        cmbPrintFormat.SelectedIndex = 0;
+                        config.Printer.PrintFormat = "Text";
+                        ConfigurationManager.SaveConfig();
+                        Logger.Warning($"配置中的打印格式 '{config.Printer.PrintFormat}' 无效，已重置为 'Text'");
+                    }
+                }
+                else
+                {
+                    // 如果配置中没有打印格式，设置默认值并保存
+                    cmbPrintFormat.SelectedIndex = 0;
+                    config.Printer.PrintFormat = "Text";
+                    ConfigurationManager.SaveConfig();
+                    Logger.Info("初始化默认打印格式: Text");
+                }
+            }
+            finally
+            {
+                // 重新启用事件处理器
+                cmbPrintFormat.SelectedIndexChanged += OnPrintFormatChanged;
             }
 
             // 设置其他选项

@@ -180,7 +180,7 @@ namespace ZebraPrinterMonitor.Forms
             this.lblPrinterStatus = new Label { Text = "打印机状态: 未知", Location = new Point(15, 85), AutoSize = true };
             
             this.cmbPrintFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
-            this.cmbPrintFormat.SelectedIndex = 0;
+            // SelectedIndex 将在 LoadConfiguration 中根据配置设置
             
             this.cmbPrinter.SelectedIndexChanged += cmbPrinter_SelectedIndexChanged;
 
