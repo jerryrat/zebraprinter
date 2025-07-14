@@ -172,7 +172,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.24";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.25";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -230,6 +230,9 @@ namespace ZebraPrinterMonitor.Forms
                     ConfigurationManager.SaveConfig();
                     Logger.Info("初始化默认打印格式: Text");
                 }
+                
+                // 同步默认模板的格式与配置格式
+                SyncDefaultTemplateFormat();
             }
             finally
             {
@@ -242,6 +245,33 @@ namespace ZebraPrinterMonitor.Forms
             chkMinimizeToTray.Checked = config.Application.MinimizeToTray;
             chkEnablePrintCount.Checked = config.Database.EnablePrintCount;  // 加载打印次数控制配置
             numPollInterval.Value = config.Database.PollInterval;
+        }
+
+        private void SyncDefaultTemplateFormat()
+        {
+            try
+            {
+                var config = ConfigurationManager.Config;
+                var defaultTemplate = PrintTemplateManager.GetDefaultTemplate();
+                
+                if (defaultTemplate != null && !string.IsNullOrEmpty(config.Printer.PrintFormat))
+                {
+                    if (Enum.TryParse<PrintFormat>(config.Printer.PrintFormat, out var configFormat))
+                    {
+                        // 如果默认模板的格式与配置不一致，同步更新默认模板
+                        if (defaultTemplate.Format != configFormat)
+                        {
+                            defaultTemplate.Format = configFormat;
+                            PrintTemplateManager.SaveTemplate(defaultTemplate);
+                            Logger.Info($"默认模板格式已同步为配置格式: {config.Printer.PrintFormat}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"同步默认模板格式失败: {ex.Message}", ex);
+            }
         }
 
         private void UpdatePrinterList()
@@ -904,6 +934,18 @@ namespace ZebraPrinterMonitor.Forms
                     var config = ConfigurationManager.Config;
                     config.Printer.PrintFormat = format!;
                     ConfigurationManager.SaveConfig();
+                    
+                    // 同时更新默认模板的格式，确保打印格式选择生效
+                    var defaultTemplate = PrintTemplateManager.GetDefaultTemplate();
+                    if (defaultTemplate != null)
+                    {
+                        if (Enum.TryParse<PrintFormat>(format, out var printFormat))
+                        {
+                            defaultTemplate.Format = printFormat;
+                            PrintTemplateManager.SaveTemplate(defaultTemplate);
+                            Logger.Info($"默认模板格式已同步更新为: {format}");
+                        }
+                    }
                     
                     AddLogMessage($"打印格式已更改为: {format}");
                     

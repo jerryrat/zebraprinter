@@ -1,2 +1,1 @@
-E:\CODE\zibraa\temp_release\appsettings.json
 E:\CODE\zibraa\temp_release\ZebraPrinterMonitor.exe
