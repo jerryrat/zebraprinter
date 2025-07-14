@@ -653,6 +653,37 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
+        private void btnAdvancedEditor_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // 获取当前选中的模板
+                PrintTemplate? currentTemplate = null;
+                if (cmbTemplateList.SelectedItem != null)
+                {
+                    string templateName = cmbTemplateList.SelectedItem.ToString() ?? "";
+                    currentTemplate = PrintTemplateManager.GetTemplate(templateName);
+                }
+
+                // 打开高级模板编辑器
+                using (var editorForm = new TemplateEditorForm(currentTemplate))
+                {
+                    if (editorForm.ShowDialog(this) == DialogResult.OK)
+                    {
+                        // 刷新模板列表
+                        LoadTemplateList();
+                        Logger.Info("模板编辑器已关闭，模板列表已刷新");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"打开高级模板编辑器失败: {ex.Message}", ex);
+                MessageBox.Show($"打开高级模板编辑器失败: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void LoadTemplateList()
         {
             cmbTemplateList.Items.Clear();

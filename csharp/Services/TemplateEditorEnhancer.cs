@@ -87,7 +87,7 @@ namespace ZebraPrinterMonitor.Services
         private void OnTextChanged(object sender, EventArgs e)
         {
             // 延迟应用语法高亮，避免频繁更新
-            Timer timer = new Timer();
+            var timer = new System.Windows.Forms.Timer();
             timer.Interval = 500; // 500ms延迟
             timer.Tick += (s, args) =>
             {

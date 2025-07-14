@@ -32,7 +32,7 @@ namespace ZebraPrinterMonitor.Forms
         private Label lblTemplateName, lblTemplateContent, lblTemplateFormat, lblAvailableFields;
         private TextBox txtTemplateName, txtTemplateContent;
         private ComboBox cmbTemplateFormat, cmbTemplateList;
-        private Button btnSaveTemplate, btnDeleteTemplate, btnPreviewTemplate, btnNewTemplate;
+        private Button btnSaveTemplate, btnDeleteTemplate, btnPreviewTemplate, btnNewTemplate, btnAdvancedEditor;
         private ListBox lstAvailableFields;
         private RichTextBox rtbTemplatePreview;
 
@@ -242,14 +242,16 @@ namespace ZebraPrinterMonitor.Forms
             this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(520, 180), Multiline = true, ScrollBars = ScrollBars.Both };
             this.btnSaveTemplate = new Button { Text = LanguageManager.GetString("SaveTemplate"), Location = new Point(15, 305), Size = new Size(80, 30) };
             this.btnPreviewTemplate = new Button { Text = LanguageManager.GetString("PreviewTemplate"), Location = new Point(110, 305), Size = new Size(80, 30) };
+            this.btnAdvancedEditor = new Button { Text = "高级编辑器", Location = new Point(205, 305), Size = new Size(100, 30), BackColor = Color.LightBlue };
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;
             
             this.btnSaveTemplate.Click += btnSaveTemplate_Click;
             this.btnPreviewTemplate.Click += btnPreviewTemplate_Click;
+            this.btnAdvancedEditor.Click += btnAdvancedEditor_Click;
             
-            this.grpTemplateEditor.Controls.AddRange(new Control[] { lblTemplateName, txtTemplateName, lblTemplateFormat, cmbTemplateFormat, lblTemplateContent, txtTemplateContent, btnSaveTemplate, btnPreviewTemplate });
+            this.grpTemplateEditor.Controls.AddRange(new Control[] { lblTemplateName, txtTemplateName, lblTemplateFormat, cmbTemplateFormat, lblTemplateContent, txtTemplateContent, btnSaveTemplate, btnPreviewTemplate, btnAdvancedEditor });
             
             // 可用字段组
             this.grpTemplatePreview = new GroupBox { Text = LanguageManager.GetString("TemplatePreview"), Location = new Point(880, 10), Size = new Size(300, 350) };

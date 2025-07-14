@@ -81,10 +81,83 @@ namespace ZebraPrinterMonitor.Models
             return $"序列号: {TR_SerialNum ?? "N/A"} - 日期: {TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}";
         }
 
-        public string FormatNumber(decimal? value)
+        public string FormatNumber(decimal? value, int decimals = 2)
         {
             if (value == null) return "N/A";
-            return value.Value.ToString("F3");
+            return value.Value.ToString($"F{decimals}");
+        }
+
+        /// <summary>
+        /// 验证记录数据的完整性
+        /// </summary>
+        public bool IsValid()
+        {
+            return !string.IsNullOrEmpty(TR_SerialNum) &&
+                   TR_DateTime.HasValue &&
+                   TR_Isc.HasValue &&
+                   TR_Ipm.HasValue &&
+                   TR_Voc.HasValue &&
+                   TR_Vpm.HasValue &&
+                   TR_Pm.HasValue;
+        }
+
+        /// <summary>
+        /// 创建示例测试记录
+        /// </summary>
+        public static TestRecord CreateSample()
+        {
+            return new TestRecord
+            {
+                TR_SerialNum = "SKT600M12120HB-" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+                TR_DateTime = DateTime.Now,
+                TR_Isc = 11.25m,
+                TR_Ipm = 10.89m,
+                TR_Voc = 49.8m,
+                TR_Vpm = 41.2m,
+                TR_Pm = 448.7m,
+                TR_Print = 1
+            };
+        }
+
+        /// <summary>
+        /// 从数据库行创建TestRecord
+        /// </summary>
+        public static TestRecord FromDataRow(System.Data.DataRow row)
+        {
+            var record = new TestRecord();
+            
+            try
+            {
+                record.TR_SerialNum = row["TR_SerialNum"]?.ToString() ?? "";
+                
+                if (DateTime.TryParse(row["TR_DateTime"]?.ToString(), out DateTime dateTime))
+                    record.TR_DateTime = dateTime;
+                
+                if (decimal.TryParse(row["TR_Isc"]?.ToString(), out decimal isc))
+                    record.TR_Isc = isc;
+                
+                if (decimal.TryParse(row["TR_Ipm"]?.ToString(), out decimal ipm))
+                    record.TR_Ipm = ipm;
+                
+                if (decimal.TryParse(row["TR_Voc"]?.ToString(), out decimal voc))
+                    record.TR_Voc = voc;
+                
+                if (decimal.TryParse(row["TR_Vpm"]?.ToString(), out decimal vpm))
+                    record.TR_Vpm = vpm;
+                
+                if (decimal.TryParse(row["TR_Pm"]?.ToString(), out decimal pm))
+                    record.TR_Pm = pm;
+                
+                if (int.TryParse(row["TR_Print"]?.ToString(), out int print))
+                    record.TR_Print = print;
+            }
+            catch (Exception ex)
+            {
+                // 注意：这里无法使用Logger，因为可能会导致循环引用
+                System.Diagnostics.Debug.WriteLine($"从数据行创建TestRecord失败: {ex.Message}");
+            }
+            
+            return record;
         }
     }
 
