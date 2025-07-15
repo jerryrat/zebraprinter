@@ -257,30 +257,30 @@ namespace ZebraPrinterMonitor.Forms
             
             this.lblTemplateContent = new Label { Text = LanguageManager.GetString("TemplateContent"), Location = new Point(15, 115), AutoSize = true };
             
-            // 减少模板内容编辑框的高度，为新控件留出空间
+            // 调整模板内容编辑框的位置和大小
             this.txtTemplateContent = new TextBox { 
                 Location = new Point(15, 135), 
-                Size = new Size(550, 180), 
+                Size = new Size(550, 240), 
                 Multiline = true, 
                 ScrollBars = ScrollBars.Both,
                 Font = new Font("Consolas", 9F)
             };
             
-            // 预印刷标签设计面板
+            // 预印刷标签设计面板 - 与模板内容编辑框位置一致，通过显示/隐藏来切换
             this.pnlPrePrintedDesign = new Panel { 
                 Location = new Point(15, 135), 
-                Size = new Size(550, 180), 
+                Size = new Size(550, 160), 
                 BorderStyle = BorderStyle.FixedSingle,
                 Visible = false,
                 BackColor = Color.White,
                 Name = "pnlPrePrintedDesign"
             };
             
-            // 字段位置设置组
+            // 字段位置设置组 - 调整位置到设计面板下方
             this.grpFieldPosition = new GroupBox { 
                 Text = LanguageManager.GetString("FieldPositionSetting"), 
-                Location = new Point(15, 320), 
-                Size = new Size(550, 75), 
+                Location = new Point(15, 305), 
+                Size = new Size(550, 90), 
                 Visible = false 
             };
             
@@ -356,6 +356,7 @@ namespace ZebraPrinterMonitor.Forms
             };
             
             // 绑定事件处理
+            this.chkPrePrintedLabel.CheckedChanged += chkPrePrintedLabel_CheckedChanged;
             this.btnAddField.Click += btnAddField_Click;
             this.btnUpdateField.Click += btnUpdateField_Click;
             this.btnRemoveField.Click += btnRemoveField_Click;
@@ -379,10 +380,10 @@ namespace ZebraPrinterMonitor.Forms
                 this.btnAddField, this.btnUpdateField, this.btnRemoveField 
             });
             
-            // 调整按钮位置到更下方
+            // 调整按钮位置到更下方 - 考虑新的控件布局
             this.btnSaveTemplate = new Button { 
                 Text = LanguageManager.GetString("SaveTemplate"), 
-                Location = new Point(15, 460), 
+                Location = new Point(15, 410), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(0, 123, 255), // 蓝色背景
@@ -398,7 +399,7 @@ namespace ZebraPrinterMonitor.Forms
             
             this.btnPreviewTemplate = new Button { 
                 Text = LanguageManager.GetString("PreviewTemplate"), 
-                Location = new Point(125, 460), 
+                Location = new Point(125, 410), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(40, 167, 69), // 绿色背景
@@ -410,7 +411,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnClearTemplate = new Button { 
                 Text = LanguageManager.GetString("ClearContent"), 
-                Location = new Point(235, 460), 
+                Location = new Point(235, 410), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(255, 193, 7), // 黄色背景
@@ -422,7 +423,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnImportTemplate = new Button { 
                 Text = LanguageManager.GetString("ImportTemplate"), 
-                Location = new Point(345, 460), 
+                Location = new Point(345, 410), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(108, 117, 125), // 灰色背景
@@ -435,7 +436,7 @@ namespace ZebraPrinterMonitor.Forms
             // 添加分隔线说明
             var lblButtonsInfo = new Label { 
                 Text = LanguageManager.GetString("ButtonsInfo"), 
-                Location = new Point(15, 510), 
+                Location = new Point(15, 460), 
                 Size = new Size(400, 20), 
                 ForeColor = Color.Gray, 
                 Font = new Font("Microsoft YaHei", 8F)

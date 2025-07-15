@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("© 2025 Zebra Printer Monitor")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("太阳能电池测试数据监控和打印系统")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.1.44.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.44+465cfbb2eeaa503dde58738d40ba7a0bbaab5d74")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.44+f6fd89ebbac0d2653ba71512996ecb5d1419e870")]
 [assembly: System.Reflection.AssemblyProductAttribute("Zebra Printer Monitor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZebraPrinterMonitor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.1.44.0")]
