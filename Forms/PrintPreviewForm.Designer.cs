@@ -37,7 +37,7 @@ namespace ZebraPrinterMonitor.Forms
             // 
             this.AutoScaleDimensions = new SizeF(6F, 13F);
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(800, 600);
+            this.ClientSize = new Size(340, 600);
             this.Controls.Add(this.lblSerialNumber);
             this.Controls.Add(this.rtbPreviewContent);
             this.Controls.Add(this.btnConfirmPrint);
@@ -53,22 +53,24 @@ namespace ZebraPrinterMonitor.Forms
             // 
             // lblSerialNumber
             // 
-            this.lblSerialNumber.AutoSize = true;
-            this.lblSerialNumber.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            this.lblSerialNumber.Location = new Point(20, 20);
+            this.lblSerialNumber.AutoSize = false;
+            this.lblSerialNumber.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            this.lblSerialNumber.ForeColor = Color.Green;
+            this.lblSerialNumber.Location = new Point(20, 15);
             this.lblSerialNumber.Name = "lblSerialNumber";
-            this.lblSerialNumber.Size = new Size(100, 20);
+            this.lblSerialNumber.Size = new Size(300, 35);
             this.lblSerialNumber.TabIndex = 0;
             this.lblSerialNumber.Text = LanguageManager.GetString("Loading");
+            this.lblSerialNumber.TextAlign = ContentAlignment.MiddleCenter;
             
             // 
             // rtbPreviewContent
             // 
-            this.rtbPreviewContent.Font = new Font("Consolas", 10F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            this.rtbPreviewContent.Location = new Point(20, 50);
+            this.rtbPreviewContent.Font = new Font("Arial", 10F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            this.rtbPreviewContent.Location = new Point(20, 60);
             this.rtbPreviewContent.Name = "rtbPreviewContent";
             this.rtbPreviewContent.ReadOnly = true;
-            this.rtbPreviewContent.Size = new Size(760, 480);
+            this.rtbPreviewContent.Size = new Size(300, 470);
             this.rtbPreviewContent.TabIndex = 1;
             this.rtbPreviewContent.Text = LanguageManager.GetString("LoadingContent");
             
@@ -82,7 +84,7 @@ namespace ZebraPrinterMonitor.Forms
             this.btnConfirmPrint.ForeColor = Color.White;
             this.btnConfirmPrint.Location = new Point(20, 550);
             this.btnConfirmPrint.Name = "btnConfirmPrint";
-            this.btnConfirmPrint.Size = new Size(150, 30);
+            this.btnConfirmPrint.Size = new Size(90, 30);
             this.btnConfirmPrint.TabIndex = 2;
             this.btnConfirmPrint.Text = LanguageManager.GetString("ConfirmPrint");
             this.btnConfirmPrint.UseVisualStyleBackColor = false;
@@ -96,9 +98,9 @@ namespace ZebraPrinterMonitor.Forms
             this.btnShowMain.FlatStyle = FlatStyle.Flat;
             this.btnShowMain.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.btnShowMain.ForeColor = Color.White;
-            this.btnShowMain.Location = new Point(325, 550);
+            this.btnShowMain.Location = new Point(125, 550);
             this.btnShowMain.Name = "btnShowMain";
-            this.btnShowMain.Size = new Size(150, 30);
+            this.btnShowMain.Size = new Size(90, 30);
             this.btnShowMain.TabIndex = 3;
             this.btnShowMain.Text = LanguageManager.GetString("ShowMainWindow");
             this.btnShowMain.UseVisualStyleBackColor = false;
@@ -112,9 +114,9 @@ namespace ZebraPrinterMonitor.Forms
             this.btnClose.FlatStyle = FlatStyle.Flat;
             this.btnClose.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.btnClose.ForeColor = Color.White;
-            this.btnClose.Location = new Point(630, 550);
+            this.btnClose.Location = new Point(230, 550);
             this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new Size(150, 30);
+            this.btnClose.Size = new Size(90, 30);
             this.btnClose.TabIndex = 4;
             this.btnClose.Text = LanguageManager.GetString("Close");
             this.btnClose.UseVisualStyleBackColor = false;

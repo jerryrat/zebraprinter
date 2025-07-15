@@ -11,6 +11,9 @@ namespace ZebraPrinterMonitor.Forms
     {
         private readonly TestRecord _record;
         private readonly PrinterService _printerService;
+        private System.Windows.Forms.Timer? _blinkTimer;
+        private int _blinkCount;
+        private Color _originalColor;
         
         public PrintPreviewForm(TestRecord record, PrinterService printerService)
         {
@@ -18,7 +21,58 @@ namespace ZebraPrinterMonitor.Forms
             _printerService = printerService;
             
             InitializeComponent();
+            InitializeBlinkTimer();
             LoadPreviewData();
+            
+            // 添加窗体关闭事件处理
+            this.FormClosing += OnFormClosing;
+        }
+        
+        private void InitializeBlinkTimer()
+        {
+            _blinkTimer = new System.Windows.Forms.Timer();
+            _blinkTimer.Interval = 200; // 200ms间隔闪烁
+            _blinkTimer.Tick += BlinkTimer_Tick;
+            _originalColor = Color.Green; // 默认绿色
+        }
+        
+        private void BlinkTimer_Tick(object? sender, EventArgs e)
+        {
+            _blinkCount++;
+            
+            if (_blinkCount <= 6) // 闪烁3次（6个切换）
+            {
+                // 在深绿色和原始绿色之间切换
+                lblSerialNumber.ForeColor = (_blinkCount % 2 == 1) ? Color.DarkGreen : _originalColor;
+            }
+            else
+            {
+                // 停止闪烁，恢复到正常绿色
+                _blinkTimer?.Stop();
+                lblSerialNumber.ForeColor = _originalColor;
+                _blinkCount = 0;
+            }
+        }
+        
+        private void StartBlinkEffect()
+        {
+            if (_blinkTimer != null)
+            {
+                _blinkTimer.Stop();
+                _blinkCount = 0;
+                _blinkTimer.Start();
+            }
+        }
+        
+        private void OnFormClosing(object? sender, FormClosingEventArgs e)
+        {
+            // 清理定时器资源
+            if (_blinkTimer != null)
+            {
+                _blinkTimer.Stop();
+                _blinkTimer.Dispose();
+                _blinkTimer = null;
+            }
         }
         
         private void LoadPreviewData()
@@ -27,6 +81,9 @@ namespace ZebraPrinterMonitor.Forms
             {
                 if (_record != null)
                 {
+                    // 启动闪烁效果
+                    StartBlinkEffect();
+                    
                     lblSerialNumber.Text = _record.TR_SerialNum ?? LanguageManager.GetString("NA");
                     
                     // 加载并显示打印内容
@@ -124,6 +181,9 @@ namespace ZebraPrinterMonitor.Forms
 
         public void LoadRecord(TestRecord record)
         {
+            // 启动闪烁效果提示新数据加载
+            StartBlinkEffect();
+            
             // 由于_record是readonly，我们需要重新创建预览内容
             RefreshPreview();
         }
@@ -141,5 +201,7 @@ namespace ZebraPrinterMonitor.Forms
                 btnConfirmPrint.Enabled = true;
             }
         }
+        
+
     }
 } 

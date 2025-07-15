@@ -282,7 +282,7 @@ namespace ZebraPrinterMonitor.Services
                 return;
             }
 
-            var font = new Font("Consolas", 10);
+            var font = new Font("Arial", 10);
             var brush = new SolidBrush(Color.Black);
             var leftMargin = 50;
             var topMargin = 50;
