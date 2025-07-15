@@ -634,6 +634,10 @@ namespace ZebraPrinterMonitor.Forms
                     txtTemplateContent.Text = template.Content;
                     cmbTemplateFormat.SelectedItem = template.Format.ToString();
                     
+                    // 确保保存按钮可用
+                    btnSaveTemplate.Enabled = true;
+                    btnSaveTemplate.Visible = true;
+                    
                     // 保存为默认模板
                     var config = ConfigurationManager.Config;
                     config.Printer.DefaultTemplate = templateName!;
@@ -652,9 +656,23 @@ namespace ZebraPrinterMonitor.Forms
 
         private void btnNewTemplate_Click(object? sender, EventArgs e)
         {
+            // 清空模板列表选择
+            cmbTemplateList.SelectedIndex = -1;
+            
+            // 设置新模板的默认值
             txtTemplateName.Text = "新模板";
             txtTemplateContent.Text = "";
             cmbTemplateFormat.SelectedIndex = 0;
+            
+            // 确保保存按钮可用
+            btnSaveTemplate.Enabled = true;
+            btnSaveTemplate.Visible = true;
+            
+            // 聚焦到模板名称输入框
+            txtTemplateName.Focus();
+            txtTemplateName.SelectAll();
+            
+            AddLogMessage("创建新模板");
         }
 
         private void btnDeleteTemplate_Click(object? sender, EventArgs e)
@@ -696,27 +714,49 @@ namespace ZebraPrinterMonitor.Forms
             if (string.IsNullOrWhiteSpace(txtTemplateName.Text))
             {
                 MessageBox.Show("请输入模板名称", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtTemplateName.Focus();
                 return;
             }
 
-            var template = new PrintTemplate
+            try
             {
-                Name = txtTemplateName.Text,
-                Content = txtTemplateContent.Text,
-                Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text")
-            };
+                var template = new PrintTemplate
+                {
+                    Name = txtTemplateName.Text,
+                    Content = txtTemplateContent.Text,
+                    Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text")
+                };
 
-            PrintTemplateManager.SaveTemplate(template);
-            LoadTemplateList();
-            AddLogMessage($"已保存模板: {template.Name}");
-            
-            // 如果保存的是当前正在使用的模板，刷新预览窗口
-            var config = ConfigurationManager.Config;
-            if (template.Name == config.Printer.DefaultTemplate && 
-                _printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                PrintTemplateManager.SaveTemplate(template);
+                LoadTemplateList();
+                
+                // 选择刚保存的模板
+                for (int i = 0; i < cmbTemplateList.Items.Count; i++)
+                {
+                    if (cmbTemplateList.Items[i].ToString() == template.Name)
+                    {
+                        cmbTemplateList.SelectedIndex = i;
+                        break;
+                    }
+                }
+                
+                AddLogMessage($"已保存模板: {template.Name}");
+                MessageBox.Show($"模板 '{template.Name}' 保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 如果保存的是当前正在使用的模板，刷新预览窗口
+                var config = ConfigurationManager.Config;
+                if (template.Name == config.Printer.DefaultTemplate && 
+                    _printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                {
+                    _printPreviewForm.RefreshPreview();
+                    Logger.Info($"预览窗口已刷新，模板已更新: {template.Name}");
+                }
+            }
+            catch (Exception ex)
             {
-                _printPreviewForm.RefreshPreview();
-                Logger.Info($"预览窗口已刷新，模板已更新: {template.Name}");
+                var errorMessage = $"保存模板失败: {ex.Message}";
+                AddLogMessage(errorMessage);
+                MessageBox.Show(errorMessage, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -241,8 +241,8 @@ namespace ZebraPrinterMonitor.Forms
             this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             this.lblTemplateContent = new Label { Text = "模板内容:", Location = new Point(15, 85), AutoSize = true };
             this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(520, 200), Multiline = true, ScrollBars = ScrollBars.Both };
-            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 325), Size = new Size(80, 30) };
-            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 325), Size = new Size(80, 30) };
+            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 325), Size = new Size(80, 30), Visible = true };
+            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 325), Size = new Size(80, 30), Visible = true };
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;

@@ -3,9 +3,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyVersion>1.1.34</AssemblyVersion>
-    <FileVersion>1.1.34</FileVersion>
-    <Version>1.1.34</Version>
+    <AssemblyVersion>1.1.35</AssemblyVersion>
+    <FileVersion>1.1.35</FileVersion>
+    <Version>1.1.35</Version>
     <Copyright>© 2025 Zebra Printer Monitor</Copyright>
     <Description>太阳能电池测试数据监控和打印系统</Description>
     <Product>Zebra Printer Monitor</Product>
