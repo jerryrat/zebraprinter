@@ -309,7 +309,33 @@ namespace ZebraPrinterMonitor.Services
                     // 新增的语言资源
                     ["LoadPreviewError"] = "加载预览失败",
                     ["NoTemplatesAvailable"] = "没有可用的模板",
-                    ["Information"] = "信息"
+                    ["Information"] = "信息",
+                    
+                    // 模板设计器专用翻译
+                    ["FieldsListTitle"] = "可用字段列表",
+                    ["CustomTextTitle"] = "自定义文本",
+                    ["EnterCustomTextHint"] = "请输入自定义文本。",
+                    ["FieldPositionX"] = "X位置:",
+                    ["FieldPositionY"] = "Y位置:",
+                    ["FieldWidth"] = "字段宽度:",
+                    ["FieldAlignment"] = "字段对齐:",
+                    ["AlignLeft"] = "左对齐",
+                    ["AlignCenter"] = "居中",
+                    ["AlignRight"] = "右对齐",
+                    ["ValueOnlyMode"] = "仅显示值",
+                    ["AddFieldBtn"] = "添加字段",
+                    ["UpdateFieldBtn"] = "更新字段",
+                    ["RemoveFieldBtn"] = "移除字段",
+                    ["ClearAllFields"] = "清空所有字段",
+                    ["DesignCanvas"] = "设计画布",
+                    ["TemplateProperties"] = "模板属性",
+                    ["SaveCurrentTemplate"] = "保存当前模板",
+                    ["LoadExistingTemplate"] = "加载现有模板",
+                    ["CloseDesigner"] = "关闭设计器",
+                    ["SelectTemplatePrompt"] = "请选择要加载的模板:",
+                    ["ConfirmAction"] = "确认操作",
+                    ["DesignInstructions"] = "操作说明：从左侧拖拽字段到设计区域，或输入自定义文本后点击添加。",
+                    ["NoFieldSelected"] = "未选择字段"
                 },
                 
                 ["en-US"] = new Dictionary<string, string>
@@ -558,7 +584,33 @@ namespace ZebraPrinterMonitor.Services
                     // 新增的语言资源
                     ["LoadPreviewError"] = "Failed to load preview",
                     ["NoTemplatesAvailable"] = "No templates available",
-                    ["Information"] = "Information"
+                    ["Information"] = "Information",
+                    
+                    // 模板设计器专用翻译
+                    ["FieldsListTitle"] = "Available Fields List",
+                    ["CustomTextTitle"] = "Custom Text",
+                    ["EnterCustomTextHint"] = "Please enter custom text.",
+                    ["FieldPositionX"] = "X Position:",
+                    ["FieldPositionY"] = "Y Position:",
+                    ["FieldWidth"] = "Field Width:",
+                    ["FieldAlignment"] = "Field Alignment:",
+                    ["AlignLeft"] = "Align Left",
+                    ["AlignCenter"] = "Align Center",
+                    ["AlignRight"] = "Align Right",
+                    ["ValueOnlyMode"] = "Value Only",
+                    ["AddFieldBtn"] = "Add Field",
+                    ["UpdateFieldBtn"] = "Update Field",
+                    ["RemoveFieldBtn"] = "Remove Field",
+                    ["ClearAllFields"] = "Clear All Fields",
+                    ["DesignCanvas"] = "Design Canvas",
+                    ["TemplateProperties"] = "Template Properties",
+                    ["SaveCurrentTemplate"] = "Save Current Template",
+                    ["LoadExistingTemplate"] = "Load Existing Template",
+                    ["CloseDesigner"] = "Close Designer",
+                    ["SelectTemplatePrompt"] = "Please select a template to load:",
+                    ["ConfirmAction"] = "Confirm Action",
+                    ["DesignInstructions"] = "Operation Instructions: Drag fields from the left to the design area, or add after entering custom text.",
+                    ["NoFieldSelected"] = "No field selected"
                 }
             };
         }

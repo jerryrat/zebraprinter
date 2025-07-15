@@ -55,78 +55,155 @@ namespace ZebraPrinterMonitor.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             
-            // 创建主面板
-            var mainPanel = new TableLayoutPanel
+            // 创建主面板 - 使用更好的布局
+            var mainContainer = new Panel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 3,
                 Padding = new Padding(10)
             };
             
-            // 设置列和行的大小
-            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70F));
-            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+            // 顶部工具栏
+            var topToolbar = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 60,
+                BackColor = Color.FromArgb(240, 240, 240)
+            };
             
-            // 字段选择面板
-            var fieldPanel = new Panel { Dock = DockStyle.Fill };
-            var fieldGroupBox = new GroupBox 
+            // 模板名称和格式设置
+            var nameLabel = new Label 
             { 
-                Text = LanguageManager.GetString("AvailableFieldsDesc"), 
-                Dock = DockStyle.Fill, 
-                Padding = new Padding(10) 
+                Text = LanguageManager.GetString("TemplateNameProp"), 
+                Location = new Point(10, 20),
+                Size = new Size(80, 23),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            
+            _templateNameTextBox = new TextBox 
+            { 
+                Location = new Point(100, 17),
+                Size = new Size(200, 23),
+                Text = _currentTemplate.Name 
+            };
+            
+            var formatLabel = new Label 
+            { 
+                Text = LanguageManager.GetString("OutputFormat"), 
+                Location = new Point(320, 20),
+                Size = new Size(80, 23),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            
+            _formatComboBox = new ComboBox 
+            { 
+                Location = new Point(410, 17),
+                Size = new Size(100, 23),
+                DropDownStyle = ComboBoxStyle.DropDownList 
+            };
+            _formatComboBox.Items.AddRange(new[] { "Text", "ZPL", "Code128", "QRCode" });
+            _formatComboBox.SelectedIndex = 0;
+            
+            // 操作说明
+            var instructionLabel = new Label
+            {
+                Text = LanguageManager.GetString("DesignInstructions"),
+                Location = new Point(530, 15),
+                Size = new Size(650, 30),
+                ForeColor = Color.DarkBlue,
+                Font = new Font("Microsoft YaHei", 8.5F)
+            };
+            
+            topToolbar.Controls.AddRange(new Control[] { nameLabel, _templateNameTextBox, formatLabel, _formatComboBox, instructionLabel });
+            
+            // 中间内容区域
+            var contentPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(0, 10, 0, 10)
+            };
+            
+            // 左侧面板 - 字段列表和自定义文本
+            var leftPanel = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 280,
+                Padding = new Padding(0, 0, 10, 0)
+            };
+            
+            var fieldsGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("FieldsListTitle"), 
+                Dock = DockStyle.Top,
+                Height = 220,
+                Padding = new Padding(5)
             };
             
             var fieldListBox = new ListBox
             {
-                Dock = DockStyle.Left,
-                Width = 200,
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 9F),
                 Items = { "{SerialNumber}", "{TestDateTime}", "{Current}", "{Voltage}", "{VoltageVpm}", "{Power}", "{PrintCount}" }
             };
+            fieldsGroupBox.Controls.Add(fieldListBox);
             
-            var customTextPanel = new Panel { Dock = DockStyle.Fill };
+            // 自定义文本组
+            var customTextGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("CustomTextTitle"), 
+                Dock = DockStyle.Top,
+                Height = 120,
+                Padding = new Padding(5),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+            
             _customTextBox = new TextBox
             {
-                PlaceholderText = LanguageManager.GetString("CustomTextPlaceholder"),
                 Dock = DockStyle.Top,
                 Height = 25,
-                Margin = new Padding(10, 0, 0, 5)
+                PlaceholderText = LanguageManager.GetString("CustomTextPlaceholder"),
+                Margin = new Padding(0, 5, 0, 5)
             };
             
             var addCustomTextButton = new Button
             {
                 Text = LanguageManager.GetString("AddCustomText"),
                 Dock = DockStyle.Top,
-                Height = 30,
-                Margin = new Padding(10, 0, 0, 5)
+                Height = 35,
+                BackColor = Color.FromArgb(0, 123, 255),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Margin = new Padding(0, 5, 0, 5)
             };
+            addCustomTextButton.FlatAppearance.BorderSize = 0;
             
             var clearDesignButton = new Button
             {
-                Text = LanguageManager.GetString("ClearDesignArea"),
+                Text = LanguageManager.GetString("ClearAllFields"),
                 Dock = DockStyle.Top,
-                Height = 30,
-                Margin = new Padding(10, 0, 0, 5)
+                Height = 35,
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Margin = new Padding(0, 5, 0, 0)
+            };
+            clearDesignButton.FlatAppearance.BorderSize = 0;
+            
+            customTextGroupBox.Controls.AddRange(new Control[] { clearDesignButton, addCustomTextButton, _customTextBox });
+            
+            leftPanel.Controls.AddRange(new Control[] { customTextGroupBox, fieldsGroupBox });
+            
+            // 中间设计面板
+            var designPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(10, 0, 10, 0)
             };
             
-            customTextPanel.Controls.Add(clearDesignButton);
-            customTextPanel.Controls.Add(addCustomTextButton);
-            customTextPanel.Controls.Add(_customTextBox);
-            
-            fieldGroupBox.Controls.Add(customTextPanel);
-            fieldGroupBox.Controls.Add(fieldListBox);
-            fieldPanel.Controls.Add(fieldGroupBox);
-            
-            // 设计面板
-            var designPanel = new Panel { Dock = DockStyle.Fill };
             var designGroupBox = new GroupBox 
             { 
-                Text = LanguageManager.GetString("DesignArea"), 
-                Dock = DockStyle.Fill, 
-                Padding = new Padding(10) 
+                Text = LanguageManager.GetString("DesignCanvas"), 
+                Dock = DockStyle.Fill,
+                Padding = new Padding(10)
             };
             
             _designPanel = new Panel
@@ -134,7 +211,6 @@ namespace ZebraPrinterMonitor.Forms
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                Margin = new Padding(5),
                 AllowDrop = true
             };
 
@@ -148,109 +224,136 @@ namespace ZebraPrinterMonitor.Forms
             designGroupBox.Controls.Add(_designPanel);
             designPanel.Controls.Add(designGroupBox);
             
-            // 属性面板
-            var propertyPanel = new Panel { Dock = DockStyle.Fill };
-            var propertyGroupBox = new GroupBox 
+            // 右侧属性面板
+            var rightPanel = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 280,
+                Padding = new Padding(10, 0, 0, 0)
+            };
+            
+            var propertiesGroupBox = new GroupBox 
             { 
-                Text = LanguageManager.GetString("PropertiesAndPreview"), 
-                Dock = DockStyle.Fill, 
-                Padding = new Padding(10) 
-            };
-            
-            var propertyContainer = new TableLayoutPanel
-            {
+                Text = LanguageManager.GetString("TemplateProperties"), 
                 Dock = DockStyle.Top,
-                Height = 80,
-                ColumnCount = 2,
-                RowCount = 2
+                Height = 200,
+                Padding = new Padding(10)
             };
             
-            propertyContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
-            propertyContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70F));
-            
-            propertyContainer.Controls.Add(new Label { Text = LanguageManager.GetString("TemplateNameProp"), Anchor = AnchorStyles.Left }, 0, 0);
-            _templateNameTextBox = new TextBox { Dock = DockStyle.Fill, Text = _currentTemplate.Name };
-            propertyContainer.Controls.Add(_templateNameTextBox, 1, 0);
-            
-            propertyContainer.Controls.Add(new Label { Text = LanguageManager.GetString("OutputFormat"), Anchor = AnchorStyles.Left }, 0, 1);
-            _formatComboBox = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
-            _formatComboBox.Items.AddRange(new[] { "Text", "ZPL", "Code128", "QRCode" });
-            _formatComboBox.SelectedItem = _currentTemplate.Format.ToString();
-            propertyContainer.Controls.Add(_formatComboBox, 1, 1);
-            
-            // 预览和操作按钮
-            var buttonPanel = new TableLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                Height = 40,
-                ColumnCount = 2,
-                RowCount = 1
-            };
-            
-            _previewButton = new Button { Text = LanguageManager.GetString("Preview"), Dock = DockStyle.Fill };
-            _previewButton.Click += PreviewButton_Click;
-            buttonPanel.Controls.Add(_previewButton, 0, 0);
-            
-            var clearButton = new Button { Text = LanguageManager.GetString("Clear"), Dock = DockStyle.Fill };
-            clearButton.Click += ClearButton_Click;
-            buttonPanel.Controls.Add(clearButton, 1, 0);
-            
+            // 预览文本框
             _previewTextBox = new RichTextBox
             {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 Font = new Font("Consolas", 9F),
-                WordWrap = false
+                BackColor = Color.FromArgb(248, 249, 250)
             };
             
-            propertyGroupBox.Controls.Add(_previewTextBox);
-            propertyGroupBox.Controls.Add(buttonPanel);
-            propertyGroupBox.Controls.Add(propertyContainer);
-            propertyPanel.Controls.Add(propertyGroupBox);
+            propertiesGroupBox.Controls.Add(_previewTextBox);
             
-            // 底部按钮面板
-            var bottomPanel = new Panel { Dock = DockStyle.Fill };
-            var bottomButtonPanel = new TableLayoutPanel
+            // 预览组
+            var previewGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("Preview"), 
+                Dock = DockStyle.Fill,
+                Padding = new Padding(10),
+                Margin = new Padding(0, 10, 0, 0)
+            };
+            
+            var previewContent = new RichTextBox
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 3,
-                RowCount = 1
+                ReadOnly = true,
+                Font = new Font("Consolas", 9F),
+                Text = LanguageManager.GetString("LoadingContent"),
+                BackColor = Color.FromArgb(248, 249, 250)
             };
             
-            _saveButton = new Button { Text = LanguageManager.GetString("SaveTemplateBtn"), Dock = DockStyle.Fill };
-            _saveButton.Click += SaveButton_Click;
-            bottomButtonPanel.Controls.Add(_saveButton, 0, 0);
+            previewGroupBox.Controls.Add(previewContent);
             
-            var loadButton = new Button { Text = LanguageManager.GetString("LoadTemplate"), Dock = DockStyle.Fill };
-            loadButton.Click += LoadButton_Click;
-            bottomButtonPanel.Controls.Add(loadButton, 1, 0);
+            rightPanel.Controls.AddRange(new Control[] { previewGroupBox, propertiesGroupBox });
             
-            _cancelButton = new Button { Text = LanguageManager.GetString("Cancel"), Dock = DockStyle.Fill };
-            _cancelButton.Click += CancelButton_Click;
-            bottomButtonPanel.Controls.Add(_cancelButton, 2, 0);
+            // 底部按钮面板
+            var bottomPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 60,
+                BackColor = Color.FromArgb(248, 249, 250),
+                Padding = new Padding(10)
+            };
             
-            bottomPanel.Controls.Add(bottomButtonPanel);
+            var buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right,
+                Width = 400,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false
+            };
             
-            // 添加控件到主面板
-            mainPanel.Controls.Add(fieldPanel, 0, 0);
-            mainPanel.Controls.Add(propertyPanel, 1, 0);
-            mainPanel.Controls.Add(designPanel, 0, 1);
-            mainPanel.Controls.Add(bottomPanel, 0, 2);
-            mainPanel.SetColumnSpan(bottomPanel, 2);
+            _saveButton = new Button 
+            { 
+                Text = LanguageManager.GetString("SaveCurrentTemplate"), 
+                Size = new Size(120, 40),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold),
+                Margin = new Padding(5, 5, 5, 5)
+            };
+            _saveButton.FlatAppearance.BorderSize = 0;
             
-            this.Controls.Add(mainPanel);
+            _previewButton = new Button 
+            { 
+                Text = LanguageManager.GetString("Preview"), 
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(0, 123, 255),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold),
+                Margin = new Padding(0, 5, 5, 5)
+            };
+            _previewButton.FlatAppearance.BorderSize = 0;
+            
+            var loadButton = new Button 
+            { 
+                Text = LanguageManager.GetString("LoadExistingTemplate"), 
+                Size = new Size(120, 40),
+                BackColor = Color.FromArgb(108, 117, 125),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold),
+                Margin = new Padding(0, 5, 5, 5)
+            };
+            loadButton.FlatAppearance.BorderSize = 0;
+            
+            _cancelButton = new Button 
+            { 
+                Text = LanguageManager.GetString("CloseDesigner"), 
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold),
+                Margin = new Padding(0, 5, 5, 5)
+            };
+            _cancelButton.FlatAppearance.BorderSize = 0;
+            
+            buttonPanel.Controls.AddRange(new Control[] { _saveButton, _previewButton, loadButton, _cancelButton });
+            bottomPanel.Controls.Add(buttonPanel);
+            
+            // 组装所有面板
+            contentPanel.Controls.AddRange(new Control[] { rightPanel, designPanel, leftPanel });
+            mainContainer.Controls.AddRange(new Control[] { bottomPanel, contentPanel, topToolbar });
+            this.Controls.Add(mainContainer);
             
             // 设置事件处理
             fieldListBox.MouseDown += FieldListBox_MouseDown;
             addCustomTextButton.Click += AddCustomText_Click;
             clearDesignButton.Click += ClearDesign_Click;
-            
-            _designPanel.DragEnter += DesignPanel_DragEnter;
-            _designPanel.DragDrop += DesignPanel_DragDrop;
-            _designPanel.MouseDown += DesignPanel_MouseDown;
-            _designPanel.MouseMove += DesignPanel_MouseMove;
-            _designPanel.MouseUp += DesignPanel_MouseUp;
-            _designPanel.Paint += DesignPanel_Paint;
+            _saveButton.Click += SaveButton_Click;
+            _previewButton.Click += PreviewButton_Click;
+            loadButton.Click += LoadButton_Click;
+            _cancelButton.Click += CancelButton_Click;
         }
 
         private void InitializeFields()
@@ -584,7 +687,7 @@ namespace ZebraPrinterMonitor.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"预览生成失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("LoadPreviewError")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -644,7 +747,7 @@ namespace ZebraPrinterMonitor.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"保存失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("TemplateSaveFailed")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -655,14 +758,14 @@ namespace ZebraPrinterMonitor.Forms
 
             if (templateNames.Length == 0)
             {
-                MessageBox.Show("没有可用的模板", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(LanguageManager.GetString("NoTemplatesAvailable"), LanguageManager.GetString("Information"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             // 简单的模板选择对话框
             var form = new Form
             {
-                Text = "选择模板",
+                Text = LanguageManager.GetString("SelectTemplate"),
                 Size = new Size(300, 150),
                 StartPosition = FormStartPosition.CenterParent
             };
@@ -678,7 +781,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var okButton = new Button
             {
-                Text = "确定",
+                Text = LanguageManager.GetString("OK"),
                 Location = new Point(100, 60),
                 Size = new Size(75, 25),
                 DialogResult = DialogResult.OK
@@ -686,7 +789,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var cancelButton = new Button
             {
-                Text = "取消",
+                Text = LanguageManager.GetString("Cancel"),
                 Location = new Point(180, 60),
                 Size = new Size(75, 25),
                 DialogResult = DialogResult.Cancel
@@ -745,7 +848,7 @@ namespace ZebraPrinterMonitor.Forms
             }
             else
             {
-                MessageBox.Show("请输入自定义文本。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(LanguageManager.GetString("EnterCustomTextHint"), LanguageManager.GetString("Information"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
