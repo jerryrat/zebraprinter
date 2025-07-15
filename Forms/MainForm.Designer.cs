@@ -60,7 +60,7 @@ namespace ZebraPrinterMonitor.Forms
             this.MinimumSize = new Size(1220, 700);  // 增加最小宽度
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.38";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.39";
             
             // TabControl设置
             this.tabControl1.Controls.Add(this.tabMonitor);
@@ -240,13 +240,13 @@ namespace ZebraPrinterMonitor.Forms
             this.lblTemplateFormat = new Label { Text = "打印格式:", Location = new Point(350, 30), AutoSize = true };
             this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             this.lblTemplateContent = new Label { Text = "模板内容:", Location = new Point(15, 85), AutoSize = true };
-            // 增加模板内容编辑框的高度
-            this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(540, 280), Multiline = true, ScrollBars = ScrollBars.Both };
-            // 调整按钮位置，增加一些按钮
-            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 400), Size = new Size(80, 30), Visible = true };
-            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 400), Size = new Size(80, 30), Visible = true };
-            var btnClearTemplate = new Button { Text = "清空内容", Location = new Point(210, 400), Size = new Size(80, 30), Visible = true };
-            var btnImportTemplate = new Button { Text = "导入模板", Location = new Point(310, 400), Size = new Size(80, 30), Visible = true };
+            // 减少模板内容编辑框的高度，为按钮留出空间
+            this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(540, 250), Multiline = true, ScrollBars = ScrollBars.Both };
+            // 调整按钮位置，确保在可视区域内
+            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 370), Size = new Size(80, 30), Visible = true };
+            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 370), Size = new Size(80, 30), Visible = true };
+            var btnClearTemplate = new Button { Text = "清空内容", Location = new Point(210, 370), Size = new Size(80, 30), Visible = true };
+            var btnImportTemplate = new Button { Text = "导入模板", Location = new Point(310, 370), Size = new Size(80, 30), Visible = true };
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;
