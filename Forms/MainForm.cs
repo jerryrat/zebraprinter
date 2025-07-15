@@ -109,7 +109,7 @@ namespace ZebraPrinterMonitor.Forms
                 _notifyIcon = new NotifyIcon
                 {
                     Icon = zebraIcon ?? SystemIcons.Application, // 如果找不到Zebra图标则使用默认图标
-                    Text = "太阳能电池测试打印监控系统 v1.1.41",
+                    Text = "太阳能电池测试打印监控系统 v1.1.42",
                     Visible = false
                 };
 
@@ -173,7 +173,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.41";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.42";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -729,60 +729,46 @@ namespace ZebraPrinterMonitor.Forms
                 {
                     Name = txtTemplateName.Text,
                     Content = txtTemplateContent.Text,
-                    Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text")
+                    Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.Text),
+                    IsDefault = false
                 };
 
-                // 如果是覆盖现有模板，先确认
-                if (!isNewTemplate)
+                // 如果是新模板或用户确认覆盖现有模板
+                if (isNewTemplate || MessageBox.Show(
+                    $"模板 '{txtTemplateName.Text}' 已存在，是否覆盖？",
+                    "确认覆盖",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    var result = MessageBox.Show($"确定要覆盖现有模板 '{template.Name}' 吗？", 
-                        "确认覆盖", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (result == DialogResult.No)
-                        return;
-                }
-
-                // 改变按钮状态表示正在保存
-                btnSaveTemplate.Enabled = false;
-                btnSaveTemplate.Text = "保存中...";
-
-                PrintTemplateManager.SaveTemplate(template);
-                LoadTemplateList();
-                
-                // 选择刚保存的模板
-                for (int i = 0; i < cmbTemplateList.Items.Count; i++)
-                {
-                    if (cmbTemplateList.Items[i].ToString() == template.Name)
+                    // 显示保存状态
+                    var originalText = btnSaveTemplate.Text;
+                    btnSaveTemplate.Text = "保存中...";
+                    btnSaveTemplate.Enabled = false;
+                    
+                    try
                     {
-                        cmbTemplateList.SelectedIndex = i;
-                        break;
+                        PrintTemplateManager.SaveTemplate(template);
+                        
+                        // 刷新模板列表
+                        LoadTemplateList();
+                        
+                        // 选择刚保存的模板
+                        cmbTemplateList.SelectedItem = template.Name;
+                        
+                        MessageBox.Show("模板保存成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        AddLogMessage($"模板保存成功: {template.Name}");
                     }
-                }
-                
-                string message = isNewTemplate ? $"新模板 '{template.Name}' 创建成功" : $"模板 '{template.Name}' 更新成功";
-                AddLogMessage(message);
-                MessageBox.Show(message, "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
-                // 如果保存的是当前正在使用的模板，刷新预览窗口
-                var config = ConfigurationManager.Config;
-                if (template.Name == config.Printer.DefaultTemplate && 
-                    _printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
-                {
-                    _printPreviewForm.RefreshPreview();
-                    Logger.Info($"预览窗口已刷新，模板已更新: {template.Name}");
+                    finally
+                    {
+                        btnSaveTemplate.Text = originalText;
+                        btnSaveTemplate.Enabled = true;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                var errorMessage = $"保存模板失败: {ex.Message}";
-                AddLogMessage(errorMessage);
-                MessageBox.Show(errorMessage, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Logger.Error(errorMessage, ex);
-            }
-            finally
-            {
-                // 恢复按钮状态
-                btnSaveTemplate.Enabled = true;
-                btnSaveTemplate.Text = "保存模板";
+                Logger.Error($"保存模板失败: {ex.Message}", ex);
+                MessageBox.Show($"保存模板失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -858,7 +844,7 @@ namespace ZebraPrinterMonitor.Forms
         private void UpdateUILanguage()
         {
             // 更新主窗体标题
-            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.41";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.42";
             
             // 更新选项卡标题
             if (tabControl1.TabPages.Count >= 4)
@@ -1088,6 +1074,64 @@ namespace ZebraPrinterMonitor.Forms
                 Logger.Error($"导入模板失败: {ex.Message}", ex);
                 MessageBox.Show($"导入模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void chkPrePrintedLabel_CheckedChanged(object? sender, EventArgs e)
+        {
+            var checkbox = sender as CheckBox;
+            if (checkbox == null) return;
+
+            // 在模板编辑器中查找相关控件
+            var templateEditor = grpTemplateEditor;
+            var txtContent = templateEditor.Controls.OfType<TextBox>().FirstOrDefault(c => c.Name == "txtTemplateContent" || c.Multiline);
+            var pnlDesign = templateEditor.Controls.OfType<Panel>().FirstOrDefault();
+            var grpFieldPos = templateEditor.Controls.OfType<GroupBox>().FirstOrDefault(g => g.Text == "字段位置设置");
+
+            if (txtContent != null && pnlDesign != null && grpFieldPos != null)
+            {
+                if (checkbox.Checked)
+                {
+                    // 切换到预印刷标签模式
+                    txtContent.Visible = false;
+                    pnlDesign.Visible = true;
+                    grpFieldPos.Visible = true;
+                    
+                    // 清空设计面板并添加网格
+                    pnlDesign.Controls.Clear();
+                    DrawGridOnPanel(pnlDesign);
+                }
+                else
+                {
+                    // 切换回普通文本模式
+                    txtContent.Visible = true;
+                    pnlDesign.Visible = false;
+                    grpFieldPos.Visible = false;
+                }
+            }
+        }
+
+        private void DrawGridOnPanel(Panel panel)
+        {
+            panel.Paint += (sender, e) =>
+            {
+                var g = e.Graphics;
+                var gridSize = 20;
+                var pen = new Pen(Color.LightGray, 1);
+                
+                // 绘制垂直线
+                for (int x = 0; x < panel.Width; x += gridSize)
+                {
+                    g.DrawLine(pen, x, 0, x, panel.Height);
+                }
+                
+                // 绘制水平线
+                for (int y = 0; y < panel.Height; y += gridSize)
+                {
+                    g.DrawLine(pen, 0, y, panel.Width, y);
+                }
+                
+                pen.Dispose();
+            };
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)

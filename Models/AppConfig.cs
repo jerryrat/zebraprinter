@@ -12,7 +12,7 @@ namespace ZebraPrinterMonitor.Models
 
     public class AppConfig
     {
-        public string Version { get; set; } = "1.1.41";
+        public string Version { get; set; } = "1.1.42";
         public DatabaseConfig Database { get; set; } = new();
         public PrinterConfig Printer { get; set; } = new();
         public ApplicationConfig Application { get; set; } = new();

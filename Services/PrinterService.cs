@@ -276,17 +276,26 @@ namespace ZebraPrinterMonitor.Services
 
         private void OnPrintPage(object sender, PrintPageEventArgs e)
         {
-            if (string.IsNullOrEmpty(_currentPrintContent))
+            if (e.Graphics == null || string.IsNullOrEmpty(_currentPrintContent))
+            {
+                e.HasMorePages = false;
                 return;
+            }
 
-            // 使用等宽字体确保对齐效果
-            var font = new Font("Consolas", 10, FontStyle.Regular);
-            var brush = Brushes.Black;
-            var startY = 50;
-            var lineHeight = 20;
+            var font = new Font("Consolas", 10);
+            var brush = new SolidBrush(Color.Black);
             var leftMargin = 50;
-            var rightMargin = 50;
-            var pageWidth = e.MarginBounds.Width - leftMargin - rightMargin;
+            var topMargin = 50;
+            var lineHeight = 18;
+            var pageWidth = e.PageBounds.Width - leftMargin * 2;
+            var startY = topMargin;
+
+            // 检查是否为预印刷标签格式
+            if (_currentPrintContent.StartsWith("FIELD_POS|"))
+            {
+                ProcessPrePrintedLabelPrint(e, font, brush);
+                return;
+            }
 
             var lines = _currentPrintContent.Split('\n');
             for (int i = 0; i < lines.Length; i++)
@@ -314,6 +323,57 @@ namespace ZebraPrinterMonitor.Services
                         // 普通行左对齐
                         e.Graphics.DrawString(line, font, brush, leftMargin, y);
                     }
+                }
+            }
+
+            e.HasMorePages = false;
+        }
+
+        private void ProcessPrePrintedLabelPrint(PrintPageEventArgs e, Font defaultFont, SolidBrush brush)
+        {
+            var lines = _currentPrintContent.Split('\n');
+            
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrEmpty(line) || !line.StartsWith("FIELD_POS|"))
+                    continue;
+
+                var parts = line.Split('|');
+                if (parts.Length < 7)
+                    continue;
+
+                try
+                {
+                    var x = int.Parse(parts[1]);
+                    var y = int.Parse(parts[2]);
+                    var width = int.Parse(parts[3]);
+                    var alignment = Enum.Parse<TextAlignment>(parts[4]);
+                    var fontSize = int.Parse(parts[5]);
+                    var text = parts[6];
+
+                    var font = new Font("Consolas", fontSize);
+                    var textSize = e.Graphics.MeasureString(text, font);
+
+                    float drawX = x;
+                    switch (alignment)
+                    {
+                        case TextAlignment.Right:
+                            drawX = x + width - textSize.Width;
+                            break;
+                        case TextAlignment.Center:
+                            drawX = x + (width - textSize.Width) / 2;
+                            break;
+                        case TextAlignment.Left:
+                        default:
+                            drawX = x;
+                            break;
+                    }
+
+                    e.Graphics.DrawString(text, font, brush, drawX, y);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"处理预印刷标签字段时出错: {ex.Message}", ex);
                 }
             }
 
