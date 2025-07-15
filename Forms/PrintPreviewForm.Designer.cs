@@ -67,13 +67,13 @@ namespace ZebraPrinterMonitor.Forms
             // 序列号标签 - 现代化设计
             this.lblSerialNumber.AutoSize = false;
             this.lblSerialNumber.Dock = DockStyle.Top;
-            this.lblSerialNumber.Font = new Font("Segoe UI", 18F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            this.lblSerialNumber.Font = new Font("Segoe UI", 24F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.lblSerialNumber.ForeColor = Color.White;
             this.lblSerialNumber.Location = new Point(12, 12);
             this.lblSerialNumber.Name = "lblSerialNumber";
             this.lblSerialNumber.Size = new Size(356, 60);
             this.lblSerialNumber.TabIndex = 0;
-            this.lblSerialNumber.Text = "🏷️ 加载中...";
+            this.lblSerialNumber.Text = "加载中...";
             this.lblSerialNumber.TextAlign = ContentAlignment.MiddleCenter;
             this.lblSerialNumber.BackColor = Color.FromArgb(52, 152, 219);
             this.lblSerialNumber.FlatStyle = FlatStyle.Flat;

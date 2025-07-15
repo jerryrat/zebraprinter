@@ -28,8 +28,8 @@ namespace ZebraPrinterMonitor.Forms
 
         public TemplateDesignerForm()
         {
+            InitializeFields();  // 先初始化字段
             InitializeComponent();
-            InitializeFields();
             _fieldControls = new List<FieldControl>();
             _currentTemplate = new PrintTemplate 
             { 

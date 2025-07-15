@@ -27,14 +27,14 @@ namespace ZebraPrinterMonitor.Forms
             _currentRecord = record;
             _autoPrintEnabled = autoPrintEnabled;
             
-            // 更新序列号显示 - 使用emoji和简洁格式
+            // 更新序列号显示 - 删除emoji，只显示序列号
             if (!string.IsNullOrEmpty(record.TR_SerialNum))
             {
-                lblSerialNumber.Text = $"🏷️ {record.TR_SerialNum}";
+                lblSerialNumber.Text = record.TR_SerialNum;
             }
             else
             {
-                lblSerialNumber.Text = "🏷️ N/A";
+                lblSerialNumber.Text = "N/A";
             }
 
             // 生成预览内容
