@@ -60,7 +60,7 @@ namespace ZebraPrinterMonitor.Forms
             this.MinimumSize = new Size(1000, 600);  // 设置最小尺寸
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.36";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.37";
             
             // TabControl设置
             this.tabControl1.Controls.Add(this.tabMonitor);

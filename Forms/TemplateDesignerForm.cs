@@ -275,8 +275,96 @@ namespace ZebraPrinterMonitor.Forms
             _templateNameTextBox.Text = _currentTemplate.Name;
             _formatComboBox.SelectedItem = _currentTemplate.Format.ToString();
             
+            // 清空现有控件
+            ClearButton_Click(null, null);
+            
             // 解析现有模板内容并创建字段控件
-            // 这里可以根据需要实现模板内容的解析逻辑
+            if (!string.IsNullOrEmpty(_currentTemplate.Content))
+            {
+                ParseAndCreateFieldControls(_currentTemplate.Content);
+            }
+        }
+
+        private void ParseAndCreateFieldControls(string content)
+        {
+            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            int yOffset = 20;
+            int lineHeight = 40;
+            
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine))
+                    continue;
+                
+                // 简化解析逻辑：按行处理，每行创建一个控件
+                ProcessLine(trimmedLine, yOffset);
+                yOffset += lineHeight;
+            }
+        }
+
+        private void ProcessLine(string line, int yOffset)
+        {
+            int xOffset = 20;
+            
+            // 查找所有字段变量
+            var fieldMatches = System.Text.RegularExpressions.Regex.Matches(line, @"\{[^}]+\}");
+            
+            if (fieldMatches.Count == 0)
+            {
+                // 纯文本行
+                CreateFieldControl(line, new Point(xOffset, yOffset), true);
+                return;
+            }
+            
+            // 处理包含字段的行
+            int lastIndex = 0;
+            
+            foreach (System.Text.RegularExpressions.Match match in fieldMatches)
+            {
+                // 处理字段前的文本
+                if (match.Index > lastIndex)
+                {
+                    var beforeText = line.Substring(lastIndex, match.Index - lastIndex);
+                    if (!string.IsNullOrEmpty(beforeText.Trim()))
+                    {
+                        CreateFieldControl(beforeText, new Point(xOffset, yOffset), true);
+                        xOffset += GetTextWidth(beforeText) + 10;
+                    }
+                }
+                
+                // 处理字段
+                var fieldKey = match.Value;
+                if (_availableFields.ContainsKey(fieldKey))
+                {
+                    CreateFieldControl(fieldKey, new Point(xOffset, yOffset), false);
+                    xOffset += GetTextWidth(_availableFields[fieldKey]) + 10;
+                }
+                else
+                {
+                    // 未知字段，作为自定义文本处理
+                    CreateFieldControl(fieldKey, new Point(xOffset, yOffset), true);
+                    xOffset += GetTextWidth(fieldKey) + 10;
+                }
+                
+                lastIndex = match.Index + match.Length;
+            }
+            
+            // 处理最后一个字段后的文本
+            if (lastIndex < line.Length)
+            {
+                var afterText = line.Substring(lastIndex);
+                if (!string.IsNullOrEmpty(afterText.Trim()))
+                {
+                    CreateFieldControl(afterText, new Point(xOffset, yOffset), true);
+                }
+            }
+        }
+
+        private int GetTextWidth(string text)
+        {
+            // 估算文本宽度（可以根据字体大小调整）
+            return text.Length * 12; // 假设每个字符宽度为12像素
         }
 
         private void FieldListBox_MouseDown(object sender, MouseEventArgs e)
