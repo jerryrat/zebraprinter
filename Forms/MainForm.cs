@@ -6,6 +6,7 @@ using ZebraPrinterMonitor.Models;
 using ZebraPrinterMonitor.Services;
 using ZebraPrinterMonitor.Utils;
 using System.IO; // Added for Path and File
+using System.Text; // Added for Encoding
 
 namespace ZebraPrinterMonitor.Forms
 {
@@ -1026,6 +1027,41 @@ namespace ZebraPrinterMonitor.Forms
             catch (Exception ex)
             {
                 Logger.Error($"更新打印格式失败: {ex.Message}", ex);
+            }
+        }
+
+        private void btnClearTemplate_Click(object? sender, EventArgs e)
+        {
+            var result = MessageBox.Show("确定要清空模板内容吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
+            {
+                txtTemplateContent.Clear();
+                rtbTemplatePreview.Clear();
+                AddLogMessage("模板内容已清空");
+            }
+        }
+
+        private void btnImportTemplate_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                var openFileDialog = new OpenFileDialog
+                {
+                    Filter = "文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
+                    Title = "导入模板文件"
+                };
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var content = File.ReadAllText(openFileDialog.FileName, Encoding.UTF8);
+                    txtTemplateContent.Text = content;
+                    AddLogMessage($"已导入模板文件: {Path.GetFileName(openFileDialog.FileName)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"导入模板失败: {ex.Message}", ex);
+                MessageBox.Show($"导入模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
