@@ -84,6 +84,9 @@ namespace ZebraPrinterMonitor.Services
         {
             var content = template.Content;
             
+            // 先处理对齐标记（在变量替换之前）
+            content = ProcessAlignment(content);
+            
             // 替换模板变量 - 使用规范化的字段名称
             content = content.Replace("{SerialNumber}", record.TR_SerialNum ?? "N/A");
             content = content.Replace("{TestDateTime}", record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
@@ -104,9 +107,6 @@ namespace ZebraPrinterMonitor.Services
             content = content.Replace("{CurrentTime}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             content = content.Replace("{CurrentDate}", DateTime.Now.ToString("yyyy-MM-dd"));
 
-            // 处理对齐和换行
-            content = ProcessAlignment(content);
-
             return content;
         }
 
@@ -117,20 +117,33 @@ namespace ZebraPrinterMonitor.Services
             // 新的对齐逻辑：
             // 1. 如果行只有值（如 {Voltage}V），则标记为右对齐（添加RIGHT_ALIGN标记）
             // 2. 如果有项目名称和值（如 Open Circuit Voltage(Voc): {Voltage}V），则保持原样用于左右对齐处理
-            var lines = content.Split('\n');
+            
+            // 处理不同的换行符格式
+            var lines = content.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             var processedLines = new List<string>();
 
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
+                
+                // 保留空行
                 if (string.IsNullOrEmpty(trimmedLine))
+                {
+                    processedLines.Add("");
                     continue;
+                }
 
                 // 检查是否只包含值（没有冒号且包含{}变量）
                 bool hasColon = trimmedLine.Contains(':');
                 bool hasVariable = trimmedLine.Contains('{') && trimmedLine.Contains('}');
                 
-                if (!hasColon && hasVariable)
+                // 跳过装饰行（下划线、等号、破折号开头的行）
+                bool isDecorationLine = trimmedLine.StartsWith("_") || 
+                                      trimmedLine.StartsWith("=") || 
+                                      trimmedLine.StartsWith("-") ||
+                                      trimmedLine.All(c => c == '_' || c == '=' || c == '-' || char.IsWhiteSpace(c));
+                
+                if (!hasColon && hasVariable && !isDecorationLine)
                 {
                     // 只有值的行，添加右对齐标记
                     processedLines.Add($"RIGHT_ALIGN:{trimmedLine}");

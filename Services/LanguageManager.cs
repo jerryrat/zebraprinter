@@ -304,7 +304,7 @@ namespace ZebraPrinterMonitor.Services
                     // 对话框标题
                     ["SaveLogDialogTitle"] = "保存日志文件",
                     ["SelectDatabaseDialogTitle"] = "选择数据库文件",
-                    ["DatabaseFileFilter"] = "数据库文件 (*.db)|*.db|所有文件 (*.*)|*.*",
+                    ["DatabaseFileFilter"] = "数据库文件 (*.mdb;*.db)|*.mdb;*.db|Access数据库 (*.mdb)|*.mdb|SQLite数据库 (*.db)|*.db|所有文件 (*.*)|*.*",
                     
                     // 新增的语言资源
                     ["LoadPreviewError"] = "加载预览失败",
@@ -578,7 +578,7 @@ namespace ZebraPrinterMonitor.Services
                     // Dialog titles
                     ["SaveLogDialogTitle"] = "Save Log File",
                     ["SelectDatabaseDialogTitle"] = "Select Database File",
-                    ["DatabaseFileFilter"] = "Database files (*.db)|*.db|All files (*.*)|*.*",
+                    ["DatabaseFileFilter"] = "Database files (*.mdb;*.db)|*.mdb;*.db|Access Database (*.mdb)|*.mdb|SQLite Database (*.db)|*.db|All files (*.*)|*.*",
                     
                     // 新增的语言资源
                     ["LoadPreviewError"] = "Failed to load preview",

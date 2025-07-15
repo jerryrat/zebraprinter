@@ -288,38 +288,65 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
+                Logger.Info("开始更新打印机列表...");
+                AddLogMessage("正在获取打印机列表...");
+                
                 var printers = _printerService.GetAvailablePrinters();
+                Logger.Info($"获取到打印机列表，数量: {printers.Count}");
+                
+                if (printers.Count > 0)
+                {
+                    Logger.Info($"打印机列表: {string.Join(", ", printers)}");
+                    AddLogMessage($"找到 {printers.Count} 台打印机: {string.Join(", ", printers)}");
+                }
+                else
+                {
+                    Logger.Warning("没有找到任何打印机");
+                    AddLogMessage("警告: 没有找到任何打印机");
+                }
+                
                 cmbPrinter.Items.Clear();
                 cmbPrinter.Items.AddRange(printers.ToArray());
+                
+                Logger.Info($"下拉框已更新，项目数: {cmbPrinter.Items.Count}");
+                AddLogMessage($"打印机下拉列表已更新，包含 {cmbPrinter.Items.Count} 个项目");
                 
                 // 恢复保存的打印机选择
                 var config = ConfigurationManager.Config;
                 if (!string.IsNullOrEmpty(config.Printer.PrinterName))
                 {
+                    Logger.Info($"尝试选择配置中的打印机: {config.Printer.PrinterName}");
                     var printerIndex = cmbPrinter.FindString(config.Printer.PrinterName);
                     if (printerIndex >= 0)
                     {
                         cmbPrinter.SelectedIndex = printerIndex;
                         lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatusOK");
                         lblPrinterStatus.ForeColor = Color.Green;
+                        Logger.Info($"成功选择打印机: {config.Printer.PrinterName}，索引: {printerIndex}");
+                        AddLogMessage($"已选择打印机: {config.Printer.PrinterName}");
                     }
                     else
                     {
                         lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatusError");
                         lblPrinterStatus.ForeColor = Color.Red;
+                        Logger.Warning($"配置中的打印机未找到: {config.Printer.PrinterName}");
+                        AddLogMessage($"错误: 配置中的打印机未找到: {config.Printer.PrinterName}");
                     }
                 }
                 else
                 {
                     lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatus");
                     lblPrinterStatus.ForeColor = Color.Gray;
+                    Logger.Info("配置中没有设置默认打印机");
+                    AddLogMessage("提示: 请选择一台打印机");
                 }
                 
-                Logger.Info($"已更新打印机列表，共发现 {printers.Count} 台打印机");
+                Logger.Info($"打印机列表更新完成，共发现 {printers.Count} 台打印机");
             }
             catch (Exception ex)
             {
                 Logger.Error($"更新打印机列表失败: {ex.Message}", ex);
+                AddLogMessage($"错误: 更新打印机列表失败: {ex.Message}");
                 lblPrinterStatus.Text = LanguageManager.GetString("GetPrinterListFailed");
                 lblPrinterStatus.ForeColor = Color.Red;
             }
@@ -484,6 +511,11 @@ namespace ZebraPrinterMonitor.Forms
 
         private void OnFormLoad(object? sender, EventArgs e)
         {
+            // 加载配置并初始化UI
+            LoadConfiguration();
+            UpdatePrinterList();
+            UpdateStatusDisplay();
+            
             // 窗体完全加载后再加载数据
             LoadRecentRecords();
             
