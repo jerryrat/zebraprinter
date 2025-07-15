@@ -345,10 +345,16 @@ namespace ZebraPrinterMonitor.Forms
                 _isDragging = true;
                 _dragStartPoint = e.Location;
                 
+                // 将选中的控件置于最顶层
+                if (_selectedField != null)
+                {
+                    _selectedField.BringToFront();
+                }
+                
                 // 高亮选中的字段
                 foreach (var control in _fieldControls)
                 {
-                    control.BackColor = control == _selectedField ? Color.Yellow : Color.LightBlue;
+                    control.BackColor = control == _selectedField ? Color.Yellow : (_selectedField?.IsCustomText == true ? Color.LightGreen : Color.LightBlue);
                 }
             }
             else if (e.Button == MouseButtons.Right)
@@ -366,19 +372,18 @@ namespace ZebraPrinterMonitor.Forms
 
         private void FieldControl_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_isDragging && _selectedField != null)
+            if (_isDragging && _selectedField != null && sender == _selectedField)
             {
-                // 将鼠标位置转换为设计面板的坐标
-                var screenPoint = _selectedField.PointToScreen(e.Location);
-                var panelPoint = _designPanel.PointToClient(screenPoint);
+                // 计算新位置：当前控件位置 + 鼠标移动的距离
+                var deltaX = e.X - _dragStartPoint.X;
+                var deltaY = e.Y - _dragStartPoint.Y;
                 
-                // 计算新位置，减去拖拽开始点的偏移
                 var newLocation = new Point(
-                    panelPoint.X - _dragStartPoint.X,
-                    panelPoint.Y - _dragStartPoint.Y
+                    _selectedField.Location.X + deltaX,
+                    _selectedField.Location.Y + deltaY
                 );
                 
-                // 确保不超出边界
+                // 确保不超出设计面板边界
                 newLocation.X = Math.Max(0, Math.Min(newLocation.X, _designPanel.Width - _selectedField.Width));
                 newLocation.Y = Math.Max(0, Math.Min(newLocation.Y, _designPanel.Height - _selectedField.Height));
                 
@@ -389,6 +394,7 @@ namespace ZebraPrinterMonitor.Forms
         private void FieldControl_MouseUp(object sender, MouseEventArgs e)
         {
             _isDragging = false;
+            _selectedField = null;
         }
 
         private void FieldControl_Click(object sender, EventArgs e)
@@ -700,6 +706,13 @@ namespace ZebraPrinterMonitor.Forms
                 Font = new Font("Microsoft Sans Serif", 8F),
                 ForeColor = Color.Black
             };
+
+            // 让Label透传鼠标事件到父控件
+            _label.MouseDown += (s, e) => OnMouseDown(e);
+            _label.MouseMove += (s, e) => OnMouseMove(e);
+            _label.MouseUp += (s, e) => OnMouseUp(e);
+            _label.Click += (s, e) => OnClick(e);
+            _label.DoubleClick += (s, e) => OnDoubleClick(e);
 
             this.Controls.Add(_label);
         }
