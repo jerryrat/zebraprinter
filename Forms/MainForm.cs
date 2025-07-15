@@ -721,12 +721,29 @@ namespace ZebraPrinterMonitor.Forms
 
             try
             {
+                // 检查是否为新模板或修改现有模板
+                bool isNewTemplate = cmbTemplateList.SelectedIndex == -1 || 
+                                    cmbTemplateList.SelectedItem?.ToString() != txtTemplateName.Text;
+                
                 var template = new PrintTemplate
                 {
                     Name = txtTemplateName.Text,
                     Content = txtTemplateContent.Text,
                     Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text")
                 };
+
+                // 如果是覆盖现有模板，先确认
+                if (!isNewTemplate)
+                {
+                    var result = MessageBox.Show($"确定要覆盖现有模板 '{template.Name}' 吗？", 
+                        "确认覆盖", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.No)
+                        return;
+                }
+
+                // 改变按钮状态表示正在保存
+                btnSaveTemplate.Enabled = false;
+                btnSaveTemplate.Text = "保存中...";
 
                 PrintTemplateManager.SaveTemplate(template);
                 LoadTemplateList();
@@ -741,8 +758,9 @@ namespace ZebraPrinterMonitor.Forms
                     }
                 }
                 
-                AddLogMessage($"已保存模板: {template.Name}");
-                MessageBox.Show($"模板 '{template.Name}' 保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string message = isNewTemplate ? $"新模板 '{template.Name}' 创建成功" : $"模板 '{template.Name}' 更新成功";
+                AddLogMessage(message);
+                MessageBox.Show(message, "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 
                 // 如果保存的是当前正在使用的模板，刷新预览窗口
                 var config = ConfigurationManager.Config;
@@ -758,6 +776,13 @@ namespace ZebraPrinterMonitor.Forms
                 var errorMessage = $"保存模板失败: {ex.Message}";
                 AddLogMessage(errorMessage);
                 MessageBox.Show(errorMessage, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Logger.Error(errorMessage, ex);
+            }
+            finally
+            {
+                // 恢复按钮状态
+                btnSaveTemplate.Enabled = true;
+                btnSaveTemplate.Text = "保存模板";
             }
         }
 
@@ -1063,6 +1088,21 @@ namespace ZebraPrinterMonitor.Forms
                 Logger.Error($"导入模板失败: {ex.Message}", ex);
                 MessageBox.Show($"导入模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // 添加快捷键支持
+            if (keyData == (Keys.Control | Keys.S))
+            {
+                // Ctrl+S 保存当前模板
+                if (tabControl1.SelectedTab == tabTemplate)
+                {
+                    btnSaveTemplate_Click(null, null);
+                    return true;
+                }
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         protected override void Dispose(bool disposing)

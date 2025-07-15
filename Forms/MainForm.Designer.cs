@@ -60,7 +60,7 @@ namespace ZebraPrinterMonitor.Forms
             this.MinimumSize = new Size(1220, 700);  // 增加最小宽度
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.39";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.40";
             
             // TabControl设置
             this.tabControl1.Controls.Add(this.tabMonitor);
@@ -243,10 +243,57 @@ namespace ZebraPrinterMonitor.Forms
             // 减少模板内容编辑框的高度，为按钮留出空间
             this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(540, 250), Multiline = true, ScrollBars = ScrollBars.Both };
             // 调整按钮位置，确保在可视区域内
-            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 370), Size = new Size(80, 30), Visible = true };
-            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 370), Size = new Size(80, 30), Visible = true };
-            var btnClearTemplate = new Button { Text = "清空内容", Location = new Point(210, 370), Size = new Size(80, 30), Visible = true };
-            var btnImportTemplate = new Button { Text = "导入模板", Location = new Point(310, 370), Size = new Size(80, 30), Visible = true };
+            this.btnSaveTemplate = new Button { 
+                Text = "保存模板", 
+                Location = new Point(15, 370), 
+                Size = new Size(100, 35), 
+                Visible = true,
+                BackColor = Color.FromArgb(0, 120, 215), // 蓝色背景
+                ForeColor = Color.White, // 白色文字
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
+            };
+            this.btnSaveTemplate.FlatAppearance.BorderSize = 0;
+            
+            // 添加工具提示
+            var toolTip = new ToolTip();
+            toolTip.SetToolTip(this.btnSaveTemplate, "保存当前模板 (Ctrl+S)");
+            
+            this.btnPreviewTemplate = new Button { 
+                Text = "预览模板", 
+                Location = new Point(125, 370), 
+                Size = new Size(100, 35), 
+                Visible = true,
+                BackColor = Color.FromArgb(40, 167, 69), // 绿色背景
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
+            };
+            this.btnPreviewTemplate.FlatAppearance.BorderSize = 0;
+            
+            var btnClearTemplate = new Button { 
+                Text = "清空内容", 
+                Location = new Point(235, 370), 
+                Size = new Size(100, 35), 
+                Visible = true,
+                BackColor = Color.FromArgb(255, 193, 7), // 黄色背景
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
+            };
+            btnClearTemplate.FlatAppearance.BorderSize = 0;
+            
+            var btnImportTemplate = new Button { 
+                Text = "导入模板", 
+                Location = new Point(345, 370), 
+                Size = new Size(100, 35), 
+                Visible = true,
+                BackColor = Color.FromArgb(108, 117, 125), // 灰色背景
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
+            };
+            btnImportTemplate.FlatAppearance.BorderSize = 0;
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;
