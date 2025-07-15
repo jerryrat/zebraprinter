@@ -100,7 +100,7 @@ namespace ZebraPrinterMonitor.Services
                     MinimizeToTray = true,
                     AutoStartMonitoring = false
                 },
-                Version = "1.1.18"
+                Version = "1.1.41"
             };
         }
 

@@ -109,7 +109,7 @@ namespace ZebraPrinterMonitor.Forms
                 _notifyIcon = new NotifyIcon
                 {
                     Icon = zebraIcon ?? SystemIcons.Application, // 如果找不到Zebra图标则使用默认图标
-                    Text = "太阳能电池测试打印监控系统 v1.1.21",
+                    Text = "太阳能电池测试打印监控系统 v1.1.41",
                     Visible = false
                 };
 
@@ -173,7 +173,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.26";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.41";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -858,7 +858,7 @@ namespace ZebraPrinterMonitor.Forms
         private void UpdateUILanguage()
         {
             // 更新主窗体标题
-            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.22";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.41";
             
             // 更新选项卡标题
             if (tabControl1.TabPages.Count >= 4)
