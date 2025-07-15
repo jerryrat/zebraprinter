@@ -60,7 +60,7 @@ namespace ZebraPrinterMonitor.Forms
             this.MinimumSize = new Size(1220, 700);  // 增加最小宽度
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.40";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.41";
             
             // TabControl设置
             this.tabControl1.Controls.Add(this.tabMonitor);
@@ -80,7 +80,6 @@ namespace ZebraPrinterMonitor.Forms
             InitializeLogsTab();
             
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.19";
             
             this.tabControl1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -233,20 +232,28 @@ namespace ZebraPrinterMonitor.Forms
             
             this.grpTemplateList.Controls.AddRange(new Control[] { cmbTemplateList, btnNewTemplate, btnDeleteTemplate, btnVisualDesigner });
             
-            // 模板编辑器组 - 调整位置和大小
-            this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(300, 10), Size = new Size(580, 450) };
+            // 模板编辑器组 - 增加高度为按钮留出更多空间
+            this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(300, 10), Size = new Size(580, 480) };
             this.lblTemplateName = new Label { Text = "模板名称:", Location = new Point(15, 30), AutoSize = true };
             this.txtTemplateName = new TextBox { Location = new Point(15, 50), Size = new Size(300, 25) };
             this.lblTemplateFormat = new Label { Text = "打印格式:", Location = new Point(350, 30), AutoSize = true };
             this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             this.lblTemplateContent = new Label { Text = "模板内容:", Location = new Point(15, 85), AutoSize = true };
-            // 减少模板内容编辑框的高度，为按钮留出空间
-            this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(540, 250), Multiline = true, ScrollBars = ScrollBars.Both };
-            // 调整按钮位置，确保在可视区域内
+            
+            // 减少模板内容编辑框的高度，确保按钮可见
+            this.txtTemplateContent = new TextBox { 
+                Location = new Point(15, 110), 
+                Size = new Size(540, 220), 
+                Multiline = true, 
+                ScrollBars = ScrollBars.Both,
+                Font = new Font("Consolas", 9F)
+            };
+            
+            // 调整按钮位置到文本框下方，确保完全可见
             this.btnSaveTemplate = new Button { 
                 Text = "保存模板", 
-                Location = new Point(15, 370), 
-                Size = new Size(100, 35), 
+                Location = new Point(15, 340), 
+                Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(0, 120, 215), // 蓝色背景
                 ForeColor = Color.White, // 白色文字
@@ -261,8 +268,8 @@ namespace ZebraPrinterMonitor.Forms
             
             this.btnPreviewTemplate = new Button { 
                 Text = "预览模板", 
-                Location = new Point(125, 370), 
-                Size = new Size(100, 35), 
+                Location = new Point(125, 340), 
+                Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(40, 167, 69), // 绿色背景
                 ForeColor = Color.White,
@@ -273,8 +280,8 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnClearTemplate = new Button { 
                 Text = "清空内容", 
-                Location = new Point(235, 370), 
-                Size = new Size(100, 35), 
+                Location = new Point(235, 340), 
+                Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(255, 193, 7), // 黄色背景
                 ForeColor = Color.Black,
@@ -285,8 +292,8 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnImportTemplate = new Button { 
                 Text = "导入模板", 
-                Location = new Point(345, 370), 
-                Size = new Size(100, 35), 
+                Location = new Point(345, 340), 
+                Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(108, 117, 125), // 灰色背景
                 ForeColor = Color.White,
@@ -294,6 +301,15 @@ namespace ZebraPrinterMonitor.Forms
                 Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
             };
             btnImportTemplate.FlatAppearance.BorderSize = 0;
+            
+            // 添加分隔线说明
+            var lblButtonsInfo = new Label { 
+                Text = "提示：蓝色保存、绿色预览、黄色清空、灰色导入", 
+                Location = new Point(15, 390), 
+                Size = new Size(400, 20), 
+                ForeColor = Color.Gray, 
+                Font = new Font("Microsoft YaHei", 8F)
+            };
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;
@@ -303,14 +319,22 @@ namespace ZebraPrinterMonitor.Forms
             btnClearTemplate.Click += btnClearTemplate_Click;
             btnImportTemplate.Click += btnImportTemplate_Click;
             
-            this.grpTemplateEditor.Controls.AddRange(new Control[] { lblTemplateName, txtTemplateName, lblTemplateFormat, cmbTemplateFormat, lblTemplateContent, txtTemplateContent, btnSaveTemplate, btnPreviewTemplate, btnClearTemplate, btnImportTemplate });
+            // 确保所有按钮都被添加到组中
+            this.grpTemplateEditor.Controls.AddRange(new Control[] { 
+                lblTemplateName, txtTemplateName, 
+                lblTemplateFormat, cmbTemplateFormat, 
+                lblTemplateContent, txtTemplateContent, 
+                btnSaveTemplate, btnPreviewTemplate, 
+                btnClearTemplate, btnImportTemplate,
+                lblButtonsInfo
+            });
             
             // 可用字段组 - 调整位置和大小
-            this.grpTemplatePreview = new GroupBox { Text = "可用字段和预览", Location = new Point(890, 10), Size = new Size(300, 450) };
+            this.grpTemplatePreview = new GroupBox { Text = "可用字段和预览", Location = new Point(890, 10), Size = new Size(300, 480) };
             this.lblAvailableFields = new Label { Text = "可用字段:", Location = new Point(15, 30), AutoSize = true };
             this.lstAvailableFields = new ListBox { Location = new Point(15, 50), Size = new Size(270, 150) };
             var lblPreview = new Label { Text = "预览:", Location = new Point(15, 210), AutoSize = true };
-            this.rtbTemplatePreview = new RichTextBox { Location = new Point(15, 230), Size = new Size(270, 180), ReadOnly = true };
+            this.rtbTemplatePreview = new RichTextBox { Location = new Point(15, 230), Size = new Size(270, 210), ReadOnly = true };
             
             // 填充可用字段
             var fields = PrintTemplateManager.GetAvailableFields();
