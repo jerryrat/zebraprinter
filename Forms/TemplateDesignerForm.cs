@@ -29,7 +29,6 @@ namespace ZebraPrinterMonitor.Forms
         public TemplateDesignerForm()
         {
             InitializeFields();  // 先初始化字段
-            InitializeComponent();
             _fieldControls = new List<FieldControl>();
             _currentTemplate = new PrintTemplate 
             { 
@@ -37,6 +36,7 @@ namespace ZebraPrinterMonitor.Forms
                 Content = "",
                 Format = PrintFormat.Text 
             };
+            InitializeComponent();
         }
 
         public TemplateDesignerForm(PrintTemplate template) : this()

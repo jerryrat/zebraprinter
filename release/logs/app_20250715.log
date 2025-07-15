@@ -426,3 +426,87 @@
 [2025-07-15 08:09:08] [INFO] 打印预览窗口已关闭
 [2025-07-15 08:09:55] [INFO] 应用程序退出
 [2025-07-15 08:09:55] [INFO] 应用程序关闭
+[2025-07-15 08:15:16] [INFO] 日志系统初始化完成
+[2025-07-15 08:15:16] [INFO] 应用程序启动中...
+[2025-07-15 08:15:16] [INFO] 配置文件加载成功: E:\CODE\zibraa\release\appsettings.json
+[2025-07-15 08:15:16] [INFO] 配置验证完成
+[2025-07-15 08:15:16] [INFO] 加载了 3 个打印模板
+[2025-07-15 08:15:16] [INFO] 成功从嵌入资源加载图标: Zebra.ico
+[2025-07-15 08:15:16] [INFO] 系统托盘图标设置完成
+[2025-07-15 08:15:16] [INFO] 已加载打印格式配置: Text
+[2025-07-15 08:15:16] [INFO] 找到 4 个打印机
+[2025-07-15 08:15:16] [INFO] 打印机设置已更新: Microsoft Print to PDF
+[2025-07-15 08:15:16] [INFO] 配置文件保存成功
+[2025-07-15 08:15:16] [INFO] UI初始化完成
+[2025-07-15 08:15:16] [INFO] 主窗体初始化完成
+[2025-07-15 08:15:16] [INFO] 应用程序架构检测: 进程=64位, 操作系统=64位
+[2025-07-15 08:15:16] [INFO] 64位应用程序无法使用32位Office驱动，跳过32位驱动测试
+[2025-07-15 08:15:16] [INFO] 尝试使用 Microsoft.ACE.OLEDB.16.0 (64位) 连接数据库...
+[2025-07-15 08:15:16] [INFO] 数据库连接成功，使用提供程序: Microsoft.ACE.OLEDB.16.0 (64位)
+[2025-07-15 08:15:16] [INFO] 获取最后记录ID: 0000000000000197
+[2025-07-15 08:15:16] [INFO] 打印次数统计已禁用，跳过TR_Print列检查
+[2025-07-15 08:15:16] [INFO] 已加载 50 条最近记录
+[2025-07-15 08:15:16] [INFO] 配置文件保存成功
+[2025-07-15 08:15:16] [INFO] 语言已切换到: zh-CN
+[2025-07-15 08:15:16] [INFO] 找到 4 个打印机
+[2025-07-15 08:15:19] [ERROR] 打开模板设计器失败: Object reference not set to an instance of an object.
+异常详情: System.NullReferenceException: Object reference not set to an instance of an object.
+   at ZebraPrinterMonitor.Forms.TemplateDesignerForm.InitializeComponent() in E:\CODE\zibraa\Forms\TemplateDesignerForm.cs:line 144
+   at ZebraPrinterMonitor.Forms.TemplateDesignerForm..ctor() in E:\CODE\zibraa\Forms\TemplateDesignerForm.cs:line 32
+   at ZebraPrinterMonitor.Forms.MainForm.btnVisualDesigner_Click(Object sender, EventArgs e) in E:\CODE\zibraa\Forms\MainForm.cs:line 679
+[2025-07-15 08:15:22] [ERROR] 打开模板设计器失败: Object reference not set to an instance of an object.
+异常详情: System.NullReferenceException: Object reference not set to an instance of an object.
+   at ZebraPrinterMonitor.Forms.TemplateDesignerForm.InitializeComponent() in E:\CODE\zibraa\Forms\TemplateDesignerForm.cs:line 144
+   at ZebraPrinterMonitor.Forms.TemplateDesignerForm..ctor() in E:\CODE\zibraa\Forms\TemplateDesignerForm.cs:line 32
+   at ZebraPrinterMonitor.Forms.MainForm.btnVisualDesigner_Click(Object sender, EventArgs e) in E:\CODE\zibraa\Forms\MainForm.cs:line 679
+[2025-07-15 08:15:27] [INFO] 打开打印预览窗口，序列号: 0000000000000001
+[2025-07-15 08:15:27] [INFO] 打印预览窗口已显示
+[2025-07-15 08:16:14] [INFO] 日志系统初始化完成
+[2025-07-15 08:16:14] [INFO] 应用程序启动中...
+[2025-07-15 08:16:14] [INFO] 配置文件加载成功: E:\CODE\zibraa\release\appsettings.json
+[2025-07-15 08:16:14] [INFO] 配置验证完成
+[2025-07-15 08:16:14] [INFO] 加载了 3 个打印模板
+[2025-07-15 08:16:14] [INFO] 成功从嵌入资源加载图标: Zebra.ico
+[2025-07-15 08:16:14] [INFO] 系统托盘图标设置完成
+[2025-07-15 08:16:14] [INFO] 已加载打印格式配置: Text
+[2025-07-15 08:16:14] [INFO] 找到 4 个打印机
+[2025-07-15 08:16:14] [INFO] 打印机设置已更新: Microsoft Print to PDF
+[2025-07-15 08:16:14] [INFO] 配置文件保存成功
+[2025-07-15 08:16:14] [INFO] UI初始化完成
+[2025-07-15 08:16:14] [INFO] 主窗体初始化完成
+[2025-07-15 08:16:15] [INFO] 应用程序架构检测: 进程=64位, 操作系统=64位
+[2025-07-15 08:16:15] [INFO] 64位应用程序无法使用32位Office驱动，跳过32位驱动测试
+[2025-07-15 08:16:15] [INFO] 尝试使用 Microsoft.ACE.OLEDB.16.0 (64位) 连接数据库...
+[2025-07-15 08:16:15] [INFO] 数据库连接成功，使用提供程序: Microsoft.ACE.OLEDB.16.0 (64位)
+[2025-07-15 08:16:15] [INFO] 获取最后记录ID: 0000000000000197
+[2025-07-15 08:16:15] [INFO] 打印次数统计已禁用，跳过TR_Print列检查
+[2025-07-15 08:16:15] [INFO] 已加载 50 条最近记录
+[2025-07-15 08:16:15] [INFO] 配置文件保存成功
+[2025-07-15 08:16:15] [INFO] 语言已切换到: zh-CN
+[2025-07-15 08:16:15] [INFO] 找到 4 个打印机
+[2025-07-15 08:16:22] [INFO] 应用程序退出
+[2025-07-15 08:16:22] [INFO] 应用程序关闭
+[2025-07-15 08:17:05] [INFO] 日志系统初始化完成
+[2025-07-15 08:17:05] [INFO] 应用程序启动中...
+[2025-07-15 08:17:05] [INFO] 配置文件加载成功: E:\CODE\zibraa\release\appsettings.json
+[2025-07-15 08:17:05] [INFO] 配置验证完成
+[2025-07-15 08:17:05] [INFO] 成功从嵌入资源加载图标: Zebra.ico
+[2025-07-15 08:17:05] [INFO] 系统托盘图标设置完成
+[2025-07-15 08:17:05] [INFO] 已加载打印格式配置: Text
+[2025-07-15 08:17:05] [INFO] 找到 4 个打印机
+[2025-07-15 08:17:05] [INFO] 打印机设置已更新: Microsoft Print to PDF
+[2025-07-15 08:17:05] [INFO] 配置文件保存成功
+[2025-07-15 08:17:05] [INFO] UI初始化完成
+[2025-07-15 08:17:05] [INFO] 主窗体初始化完成
+[2025-07-15 08:17:05] [INFO] 应用程序架构检测: 进程=64位, 操作系统=64位
+[2025-07-15 08:17:05] [INFO] 64位应用程序无法使用32位Office驱动，跳过32位驱动测试
+[2025-07-15 08:17:05] [INFO] 尝试使用 Microsoft.ACE.OLEDB.16.0 (64位) 连接数据库...
+[2025-07-15 08:17:06] [INFO] 数据库连接成功，使用提供程序: Microsoft.ACE.OLEDB.16.0 (64位)
+[2025-07-15 08:17:06] [INFO] 获取最后记录ID: 0000000000000197
+[2025-07-15 08:17:06] [INFO] 打印次数统计已禁用，跳过TR_Print列检查
+[2025-07-15 08:17:06] [INFO] 已加载 50 条最近记录
+[2025-07-15 08:17:06] [INFO] 配置文件保存成功
+[2025-07-15 08:17:06] [INFO] 语言已切换到: zh-CN
+[2025-07-15 08:17:06] [INFO] 找到 4 个打印机
+[2025-07-15 08:17:18] [INFO] 应用程序退出
+[2025-07-15 08:17:18] [INFO] 应用程序关闭
