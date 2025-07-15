@@ -276,21 +276,148 @@ namespace ZebraPrinterMonitor.Services
 
         private void OnPrintPage(object sender, PrintPageEventArgs e)
         {
-            if (string.IsNullOrEmpty(_currentPrintContent) || e.Graphics == null)
+            if (string.IsNullOrEmpty(_currentPrintContent))
                 return;
 
-            var font = new Font("Microsoft YaHei", 10);
+            // 使用等宽字体确保对齐效果
+            var font = new Font("Consolas", 10, FontStyle.Regular);
             var brush = Brushes.Black;
             var startY = 50;
             var lineHeight = 20;
+            var leftMargin = 50;
+            var rightMargin = 50;
+            var pageWidth = e.MarginBounds.Width - leftMargin - rightMargin;
 
             var lines = _currentPrintContent.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
-                e.Graphics.DrawString(lines[i], font, brush, 50, startY + (i * lineHeight));
+                var line = lines[i];
+                var y = startY + (i * lineHeight);
+                
+                // 检查是否为需要对齐的行（包含冒号且不是装饰行）
+                if (line.Contains(':') && !line.Trim().StartsWith("_") && !line.Trim().StartsWith("-") && !line.Trim().StartsWith("="))
+                {
+                    DrawAlignedLine(e.Graphics, line, font, brush, leftMargin, y, pageWidth);
+                }
+                else
+                {
+                    // 普通行，居中或左对齐
+                    if (line.Trim().StartsWith("=") || line.Trim().Contains("测试标签") || line.Trim().Contains("测试参数"))
+                    {
+                        // 标题行居中
+                        var textSize = e.Graphics.MeasureString(line, font);
+                        var x = leftMargin + (pageWidth - textSize.Width) / 2;
+                        e.Graphics.DrawString(line, font, brush, x, y);
+                    }
+                    else
+                    {
+                        // 普通行左对齐
+                        e.Graphics.DrawString(line, font, brush, leftMargin, y);
+                    }
+                }
             }
 
             e.HasMorePages = false;
+        }
+
+        private void DrawAlignedLine(Graphics graphics, string line, Font font, Brush brush, float leftMargin, float y, float pageWidth)
+        {
+            var parts = line.Split(':', 2);
+            if (parts.Length != 2) 
+            {
+                graphics.DrawString(line, font, brush, leftMargin, y);
+                return;
+            }
+
+            var label = parts[0].Trim();
+            var value = parts[1].Trim();
+
+            // 测量字符串宽度
+            var labelSize = graphics.MeasureString(label + ":", font);
+            var valueSize = graphics.MeasureString(value, font);
+
+            // 如果内容太长，进行换行处理
+            if (labelSize.Width + valueSize.Width > pageWidth)
+            {
+                // 标签太长，换行
+                if (labelSize.Width > pageWidth * 0.6)
+                {
+                    var wrappedLabel = WrapTextToWidth(graphics, label, font, pageWidth * 0.6f);
+                    var labelLines = wrappedLabel.Split('\n');
+                    
+                    // 绘制标签行
+                    for (int i = 0; i < labelLines.Length; i++)
+                    {
+                        graphics.DrawString(labelLines[i], font, brush, leftMargin, y + i * 20);
+                    }
+                    
+                    // 在最后一行绘制冒号和值
+                    var lastLineWidth = graphics.MeasureString(labelLines[labelLines.Length - 1], font).Width;
+                    graphics.DrawString(":", font, brush, leftMargin + lastLineWidth, y + (labelLines.Length - 1) * 20);
+                    graphics.DrawString(value, font, brush, leftMargin + pageWidth - valueSize.Width, y + (labelLines.Length - 1) * 20);
+                }
+                else
+                {
+                    // 值太长，换行
+                    graphics.DrawString(label + ":", font, brush, leftMargin, y);
+                    var wrappedValue = WrapTextToWidth(graphics, value, font, pageWidth * 0.7f);
+                    var valueLines = wrappedValue.Split('\n');
+                    
+                    for (int i = 0; i < valueLines.Length; i++)
+                    {
+                        var valueLineSize = graphics.MeasureString(valueLines[i], font);
+                        graphics.DrawString(valueLines[i], font, brush, leftMargin + pageWidth - valueLineSize.Width, y + (i + 1) * 20);
+                    }
+                }
+            }
+            else
+            {
+                // 正常情况：标签左对齐，值右对齐
+                graphics.DrawString(label + ":", font, brush, leftMargin, y);
+                graphics.DrawString(value, font, brush, leftMargin + pageWidth - valueSize.Width, y);
+            }
+        }
+
+        private string WrapTextToWidth(Graphics graphics, string text, Font font, float maxWidth)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            var words = text.Split(' ');
+            var lines = new List<string>();
+            var currentLine = "";
+
+            foreach (var word in words)
+            {
+                var testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+                var testSize = graphics.MeasureString(testLine, font);
+
+                if (testSize.Width <= maxWidth)
+                {
+                    currentLine = testLine;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(currentLine))
+                    {
+                        lines.Add(currentLine);
+                        currentLine = word;
+                    }
+                    else
+                    {
+                        // 单词太长，强制分割
+                        lines.Add(word);
+                        currentLine = "";
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(currentLine))
+            {
+                lines.Add(currentLine);
+            }
+
+            return string.Join("\n", lines);
         }
 
         private string GenerateTextReceipt(TestRecord record)

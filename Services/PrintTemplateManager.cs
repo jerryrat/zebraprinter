@@ -101,136 +101,22 @@ namespace ZebraPrinterMonitor.Services
 
         private static string ProcessAlignment(string content)
         {
+            // 简化对齐处理，因为现在使用像素级精确对齐
+            // 只需要清理多余的空格和换行符
             var lines = content.Split('\n');
             var processedLines = new List<string>();
 
             foreach (var line in lines)
             {
+                // 移除行首行尾的多余空格，但保留基本格式
                 var trimmedLine = line.Trim();
-                
-                // 处理包含冒号的行，实现左对齐和右对齐
-                if (trimmedLine.Contains(':') && !trimmedLine.StartsWith("_") && !trimmedLine.StartsWith("-"))
-                {
-                    var parts = trimmedLine.Split(':', 2);
-                    if (parts.Length == 2)
-                    {
-                        var label = parts[0].Trim();
-                        var value = parts[1].Trim();
-                        
-                        // 如果标签或值太长，进行处理
-                        var processedLine = FormatAlignedLine(label, value);
-                        processedLines.Add(processedLine);
-                    }
-                    else
-                    {
-                        processedLines.Add(trimmedLine);
-                    }
-                }
-                else
+                if (!string.IsNullOrEmpty(trimmedLine))
                 {
                     processedLines.Add(trimmedLine);
                 }
             }
 
             return string.Join("\r\n", processedLines);
-        }
-
-        private static string FormatAlignedLine(string label, string value, int totalWidth = 60)
-        {
-            // 清理标签和值
-            label = label.Trim();
-            value = value.Trim();
-
-            // 处理超长标签
-            if (label.Length > totalWidth - 10)
-            {
-                // 如果标签太长，分成两行
-                var wrappedLabel = WrapText(label, totalWidth - 4);
-                var lines = wrappedLabel.Split('\n');
-                var result = new List<string>();
-                
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    if (i == lines.Length - 1)
-                    {
-                        // 最后一行，添加值
-                        result.Add(FormatSingleLine(lines[i], value, totalWidth));
-                    }
-                    else
-                    {
-                        // 其他行只有标签
-                        result.Add(lines[i]);
-                    }
-                }
-                return string.Join("\r\n", result);
-            }
-            else
-            {
-                return FormatSingleLine(label, value, totalWidth);
-            }
-        }
-
-        private static string FormatSingleLine(string label, string value, int totalWidth)
-        {
-            // 如果值太长，也需要处理
-            if (value.Length > totalWidth - label.Length - 3)
-            {
-                // 值太长，分成两行
-                var availableWidth = totalWidth - 4;
-                var wrappedValue = WrapText(value, availableWidth);
-                var valueLines = wrappedValue.Split('\n');
-                
-                var result = new List<string>();
-                // 第一行：标签 + 第一部分值
-                result.Add(label.PadRight(totalWidth - valueLines[0].Length) + valueLines[0]);
-                
-                // 后续行：只有值，右对齐
-                for (int i = 1; i < valueLines.Length; i++)
-                {
-                    result.Add(valueLines[i].PadLeft(totalWidth));
-                }
-                
-                return string.Join("\r\n", result);
-            }
-            else
-            {
-                // 正常情况：标签左对齐，值右对齐
-                return label.PadRight(totalWidth - value.Length) + value;
-            }
-        }
-
-        private static string WrapText(string text, int width)
-        {
-            if (string.IsNullOrEmpty(text) || width <= 0)
-                return text;
-
-            var words = text.Split(' ');
-            var lines = new List<string>();
-            var currentLine = "";
-
-            foreach (var word in words)
-            {
-                if (string.IsNullOrEmpty(currentLine))
-                {
-                    currentLine = word;
-                }
-                else if (currentLine.Length + word.Length + 1 <= width)
-                {
-                    currentLine += " " + word;
-                }
-                else
-                {
-                    lines.Add(currentLine);
-                    currentLine = word;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(currentLine))
-            {
-                lines.Add(currentLine);
-            }
-
-            return string.Join("\n", lines);
         }
 
         public static List<string> GetAvailableFields()

@@ -69,8 +69,8 @@ namespace ZebraPrinterMonitor.Forms
                 // 简化显示内容 - 只显示核心打印内容
                 rtbPreviewContent.Clear();
                 
-                // 直接显示处理后的打印内容，使用统一的字体
-                rtbPreviewContent.SelectionFont = new Font("Consolas", 11F, FontStyle.Regular);
+                // 直接显示处理后的打印内容，使用统一的等宽字体确保对齐效果
+                rtbPreviewContent.SelectionFont = new Font("Consolas", 10F, FontStyle.Regular);
                 rtbPreviewContent.SelectionColor = Color.FromArgb(33, 37, 41);
                 rtbPreviewContent.AppendText(processedContent);
                 
