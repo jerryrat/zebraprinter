@@ -746,9 +746,16 @@ namespace ZebraPrinterMonitor.Forms
             if (lstAvailableFields.SelectedItem != null)
             {
                 var field = lstAvailableFields.SelectedItem.ToString();
-                txtTemplateContent.Text += field;
+                
+                // 获取当前光标位置
+                int cursorPosition = txtTemplateContent.SelectionStart;
+                
+                // 在光标位置插入字段
+                txtTemplateContent.Text = txtTemplateContent.Text.Insert(cursorPosition, field);
+                
+                // 设置光标位置到插入字段的末尾
+                txtTemplateContent.SelectionStart = cursorPosition + field.Length;
                 txtTemplateContent.Focus();
-                txtTemplateContent.SelectionStart = txtTemplateContent.Text.Length;
             }
         }
 

@@ -234,15 +234,15 @@ namespace ZebraPrinterMonitor.Forms
             this.grpTemplateList.Controls.AddRange(new Control[] { cmbTemplateList, btnNewTemplate, btnDeleteTemplate, btnVisualDesigner });
             
             // 模板编辑器组
-            this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(320, 10), Size = new Size(550, 350) };
+            this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(320, 10), Size = new Size(550, 370) };
             this.lblTemplateName = new Label { Text = "模板名称:", Location = new Point(15, 30), AutoSize = true };
             this.txtTemplateName = new TextBox { Location = new Point(15, 50), Size = new Size(300, 25) };
             this.lblTemplateFormat = new Label { Text = "打印格式:", Location = new Point(350, 30), AutoSize = true };
             this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             this.lblTemplateContent = new Label { Text = "模板内容:", Location = new Point(15, 85), AutoSize = true };
-            this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(520, 180), Multiline = true, ScrollBars = ScrollBars.Both };
-            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 305), Size = new Size(80, 30) };
-            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 305), Size = new Size(80, 30) };
+            this.txtTemplateContent = new TextBox { Location = new Point(15, 110), Size = new Size(520, 200), Multiline = true, ScrollBars = ScrollBars.Both };
+            this.btnSaveTemplate = new Button { Text = "保存模板", Location = new Point(15, 325), Size = new Size(80, 30) };
+            this.btnPreviewTemplate = new Button { Text = "预览模板", Location = new Point(110, 325), Size = new Size(80, 30) };
             
             this.cmbTemplateFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             this.cmbTemplateFormat.SelectedIndex = 0;

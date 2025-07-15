@@ -74,7 +74,7 @@ namespace ZebraPrinterMonitor.Forms
             // 字段列表面板
             var fieldPanel = new GroupBox
             {
-                Text = "可用字段",
+                Text = "可用字段 (只引用数据内容，项目名称请自己输入)",
                 Dock = DockStyle.Fill,
                 Margin = new Padding(5)
             };
@@ -531,8 +531,8 @@ namespace ZebraPrinterMonitor.Forms
                 }
                 else
                 {
-                    // 预定义字段添加为模板变量
-                    content += $"{field.DisplayName}: {field.FieldKey}\r\n";
+                    // 预定义字段只添加变量引用，不包含项目名称
+                    content += field.FieldKey + "\r\n";
                 }
             }
 
