@@ -13,6 +13,13 @@ namespace ZebraPrinterMonitor.Services
 
         public static AppConfig Config => _config ?? throw new InvalidOperationException("配置未初始化");
 
+        static ConfigurationManager()
+        {
+            _config = new AppConfig();
+            _config.Version = "1.1.44";
+            Initialize();
+        }
+
         public static void Initialize()
         {
             try
@@ -100,7 +107,7 @@ namespace ZebraPrinterMonitor.Services
                     MinimizeToTray = true,
                     AutoStartMonitoring = false
                 },
-                Version = "1.1.42"
+                Version = "1.1.43"
             };
         }
 

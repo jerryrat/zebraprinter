@@ -18,6 +18,7 @@ namespace ZebraPrinterMonitor.Forms
         private ComboBox _formatComboBox;
         private Button _saveButton;
         private Button _previewButton;
+        private TextBox _customTextBox;
         private Button _cancelButton;
         private RichTextBox _previewTextBox;
         private Dictionary<string, string> _availableFields;
@@ -47,107 +48,87 @@ namespace ZebraPrinterMonitor.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "模板可视化设计器";
-            this.Size = new Size(1000, 700);
+            this.Size = new Size(1200, 800);
+            this.Text = LanguageManager.GetString("VisualDesignerTitle");
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-
+            
             // 创建主面板
             var mainPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 3,
-                RowCount = 2
+                ColumnCount = 2,
+                RowCount = 3,
+                Padding = new Padding(10)
             };
-
-            // 设置列宽比例
-            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            
+            // 设置列和行的大小
+            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70F));
             mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
-
-            // 设置行高比例
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 85F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 15F));
-
-            // 字段列表面板
-            var fieldPanel = new GroupBox
-            {
-                Text = "可用字段 (只引用数据内容，项目名称请自己输入)",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(5)
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+            
+            // 字段选择面板
+            var fieldPanel = new Panel { Dock = DockStyle.Fill };
+            var fieldGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("AvailableFieldsDesc"), 
+                Dock = DockStyle.Fill, 
+                Padding = new Padding(10) 
             };
-
-            var fieldContainer = new TableLayoutPanel
+            
+            var fieldListBox = new ListBox
             {
-                Dock = DockStyle.Fill,
-                RowCount = 4,
-                ColumnCount = 1,
-                Margin = new Padding(5)
+                Dock = DockStyle.Left,
+                Width = 200,
+                Items = { "{SerialNumber}", "{TestDateTime}", "{Current}", "{Voltage}", "{VoltageVpm}", "{Power}", "{PrintCount}" }
             };
-
-            // 设置行高
-            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 70F)); // 字段列表
-            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 文本输入
-            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 添加按钮
-            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 清空按钮
-
-            _fieldListBox = new ListBox
+            
+            var customTextPanel = new Panel { Dock = DockStyle.Fill };
+            _customTextBox = new TextBox
             {
-                Dock = DockStyle.Fill,
-                SelectionMode = SelectionMode.One
+                PlaceholderText = LanguageManager.GetString("CustomTextPlaceholder"),
+                Dock = DockStyle.Top,
+                Height = 25,
+                Margin = new Padding(10, 0, 0, 5)
             };
-
-            // 填充字段列表
-            foreach (var field in _availableFields)
+            
+            var addCustomTextButton = new Button
             {
-                _fieldListBox.Items.Add($"{field.Key} - {field.Value}");
-            }
-
-            _fieldListBox.MouseDown += FieldListBox_MouseDown;
-            fieldContainer.Controls.Add(_fieldListBox, 0, 0);
-
-            // 自定义文本输入框
-            var customTextBox = new TextBox
-            {
-                Dock = DockStyle.Fill,
-                PlaceholderText = "输入自定义文本",
-                Margin = new Padding(2)
+                Text = LanguageManager.GetString("AddCustomText"),
+                Dock = DockStyle.Top,
+                Height = 30,
+                Margin = new Padding(10, 0, 0, 5)
             };
-            fieldContainer.Controls.Add(customTextBox, 0, 1);
-
-            // 添加自定义文本按钮
-            var addCustomButton = new Button
-            {
-                Text = "添加自定义文本",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(2)
-            };
-            addCustomButton.Click += (s, e) => AddCustomText_Click(customTextBox);
-            fieldContainer.Controls.Add(addCustomButton, 0, 2);
-
-            // 清空设计面板按钮
+            
             var clearDesignButton = new Button
             {
-                Text = "清空设计面板",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(2)
+                Text = LanguageManager.GetString("ClearDesignArea"),
+                Dock = DockStyle.Top,
+                Height = 30,
+                Margin = new Padding(10, 0, 0, 5)
             };
-            clearDesignButton.Click += ClearDesign_Click;
-            fieldContainer.Controls.Add(clearDesignButton, 0, 3);
-
-            fieldPanel.Controls.Add(fieldContainer);
-            mainPanel.Controls.Add(fieldPanel, 0, 0);
-
+            
+            customTextPanel.Controls.Add(clearDesignButton);
+            customTextPanel.Controls.Add(addCustomTextButton);
+            customTextPanel.Controls.Add(_customTextBox);
+            
+            fieldGroupBox.Controls.Add(customTextPanel);
+            fieldGroupBox.Controls.Add(fieldListBox);
+            fieldPanel.Controls.Add(fieldGroupBox);
+            
             // 设计面板
-            var designGroup = new GroupBox
-            {
-                Text = "设计区域",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(5)
+            var designPanel = new Panel { Dock = DockStyle.Fill };
+            var designGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("DesignArea"), 
+                Dock = DockStyle.Fill, 
+                Padding = new Padding(10) 
             };
-
+            
             _designPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -164,48 +145,56 @@ namespace ZebraPrinterMonitor.Forms
             _designPanel.MouseUp += DesignPanel_MouseUp;
             _designPanel.Paint += DesignPanel_Paint;
 
-            designGroup.Controls.Add(_designPanel);
-            mainPanel.Controls.Add(designGroup, 1, 0);
-
+            designGroupBox.Controls.Add(_designPanel);
+            designPanel.Controls.Add(designGroupBox);
+            
             // 属性面板
-            var propertyPanel = new GroupBox
-            {
-                Text = "属性和预览",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(5)
+            var propertyPanel = new Panel { Dock = DockStyle.Fill };
+            var propertyGroupBox = new GroupBox 
+            { 
+                Text = LanguageManager.GetString("PropertiesAndPreview"), 
+                Dock = DockStyle.Fill, 
+                Padding = new Padding(10) 
             };
-
+            
             var propertyContainer = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                RowCount = 8,
+                Dock = DockStyle.Top,
+                Height = 80,
                 ColumnCount = 2,
-                Margin = new Padding(5)
+                RowCount = 2
             };
-
-            // 模板名称
-            propertyContainer.Controls.Add(new Label { Text = "模板名称:", Anchor = AnchorStyles.Left }, 0, 0);
+            
+            propertyContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            propertyContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70F));
+            
+            propertyContainer.Controls.Add(new Label { Text = LanguageManager.GetString("TemplateNameProp"), Anchor = AnchorStyles.Left }, 0, 0);
             _templateNameTextBox = new TextBox { Dock = DockStyle.Fill, Text = _currentTemplate.Name };
             propertyContainer.Controls.Add(_templateNameTextBox, 1, 0);
-
-            // 格式选择
-            propertyContainer.Controls.Add(new Label { Text = "输出格式:", Anchor = AnchorStyles.Left }, 0, 1);
+            
+            propertyContainer.Controls.Add(new Label { Text = LanguageManager.GetString("OutputFormat"), Anchor = AnchorStyles.Left }, 0, 1);
             _formatComboBox = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
             _formatComboBox.Items.AddRange(new[] { "Text", "ZPL", "Code128", "QRCode" });
             _formatComboBox.SelectedItem = _currentTemplate.Format.ToString();
             propertyContainer.Controls.Add(_formatComboBox, 1, 1);
-
-            // 预览按钮
-            _previewButton = new Button { Text = "预览", Dock = DockStyle.Fill };
+            
+            // 预览和操作按钮
+            var buttonPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                Height = 40,
+                ColumnCount = 2,
+                RowCount = 1
+            };
+            
+            _previewButton = new Button { Text = LanguageManager.GetString("Preview"), Dock = DockStyle.Fill };
             _previewButton.Click += PreviewButton_Click;
-            propertyContainer.Controls.Add(_previewButton, 0, 2);
-
-            // 清空按钮
-            var clearButton = new Button { Text = "清空", Dock = DockStyle.Fill };
+            buttonPanel.Controls.Add(_previewButton, 0, 0);
+            
+            var clearButton = new Button { Text = LanguageManager.GetString("Clear"), Dock = DockStyle.Fill };
             clearButton.Click += ClearButton_Click;
-            propertyContainer.Controls.Add(clearButton, 1, 2);
-
-            // 预览文本框
+            buttonPanel.Controls.Add(clearButton, 1, 0);
+            
             _previewTextBox = new RichTextBox
             {
                 Dock = DockStyle.Fill,
@@ -213,45 +202,55 @@ namespace ZebraPrinterMonitor.Forms
                 Font = new Font("Consolas", 9F),
                 WordWrap = false
             };
-            propertyContainer.Controls.Add(_previewTextBox, 0, 3);
-            propertyContainer.SetColumnSpan(_previewTextBox, 2);
-            propertyContainer.SetRowSpan(_previewTextBox, 5);
-
-            // 设置行高
-            for (int i = 0; i < 3; i++)
-            {
-                propertyContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            }
-            propertyContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            propertyPanel.Controls.Add(propertyContainer);
-            mainPanel.Controls.Add(propertyPanel, 2, 0);
-
-            // 按钮面板
-            var buttonPanel = new TableLayoutPanel
+            
+            propertyGroupBox.Controls.Add(_previewTextBox);
+            propertyGroupBox.Controls.Add(buttonPanel);
+            propertyGroupBox.Controls.Add(propertyContainer);
+            propertyPanel.Controls.Add(propertyGroupBox);
+            
+            // 底部按钮面板
+            var bottomPanel = new Panel { Dock = DockStyle.Fill };
+            var bottomButtonPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 3,
-                RowCount = 1,
-                Margin = new Padding(5)
+                RowCount = 1
             };
-
-            _saveButton = new Button { Text = "保存模板", Dock = DockStyle.Fill };
+            
+            _saveButton = new Button { Text = LanguageManager.GetString("SaveTemplateBtn"), Dock = DockStyle.Fill };
             _saveButton.Click += SaveButton_Click;
-            buttonPanel.Controls.Add(_saveButton, 0, 0);
-
-            var loadButton = new Button { Text = "加载模板", Dock = DockStyle.Fill };
+            bottomButtonPanel.Controls.Add(_saveButton, 0, 0);
+            
+            var loadButton = new Button { Text = LanguageManager.GetString("LoadTemplate"), Dock = DockStyle.Fill };
             loadButton.Click += LoadButton_Click;
-            buttonPanel.Controls.Add(loadButton, 1, 0);
-
-            _cancelButton = new Button { Text = "取消", Dock = DockStyle.Fill };
+            bottomButtonPanel.Controls.Add(loadButton, 1, 0);
+            
+            _cancelButton = new Button { Text = LanguageManager.GetString("Cancel"), Dock = DockStyle.Fill };
             _cancelButton.Click += CancelButton_Click;
-            buttonPanel.Controls.Add(_cancelButton, 2, 0);
-
-            mainPanel.Controls.Add(buttonPanel, 0, 1);
-            mainPanel.SetColumnSpan(buttonPanel, 3);
-
+            bottomButtonPanel.Controls.Add(_cancelButton, 2, 0);
+            
+            bottomPanel.Controls.Add(bottomButtonPanel);
+            
+            // 添加控件到主面板
+            mainPanel.Controls.Add(fieldPanel, 0, 0);
+            mainPanel.Controls.Add(propertyPanel, 1, 0);
+            mainPanel.Controls.Add(designPanel, 0, 1);
+            mainPanel.Controls.Add(bottomPanel, 0, 2);
+            mainPanel.SetColumnSpan(bottomPanel, 2);
+            
             this.Controls.Add(mainPanel);
+            
+            // 设置事件处理
+            fieldListBox.MouseDown += FieldListBox_MouseDown;
+            addCustomTextButton.Click += AddCustomText_Click;
+            clearDesignButton.Click += ClearDesign_Click;
+            
+            _designPanel.DragEnter += DesignPanel_DragEnter;
+            _designPanel.DragDrop += DesignPanel_DragDrop;
+            _designPanel.MouseDown += DesignPanel_MouseDown;
+            _designPanel.MouseMove += DesignPanel_MouseMove;
+            _designPanel.MouseUp += DesignPanel_MouseUp;
+            _designPanel.Paint += DesignPanel_Paint;
         }
 
         private void InitializeFields()
@@ -276,7 +275,7 @@ namespace ZebraPrinterMonitor.Forms
             _formatComboBox.SelectedItem = _currentTemplate.Format.ToString();
             
             // 清空现有控件
-            ClearButton_Click(null, null);
+            ClearButton_Click(null, EventArgs.Empty);
             
             // 解析现有模板内容并创建字段控件
             if (!string.IsNullOrEmpty(_currentTemplate.Content))
@@ -731,18 +730,18 @@ namespace ZebraPrinterMonitor.Forms
             this.Close();
         }
 
-        private void AddCustomText_Click(TextBox textBox)
+        private void AddCustomText_Click(object? sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(textBox.Text))
+            if (!string.IsNullOrWhiteSpace(_customTextBox.Text))
             {
-                var customText = textBox.Text.Trim();
+                var customText = _customTextBox.Text.Trim();
                 // 在设计面板中心位置添加自定义文本
                 var centerPoint = new Point(
                     _designPanel.Width / 2 - 60, 
                     _designPanel.Height / 2 - 12
                 );
                 CreateFieldControl(customText, centerPoint, true);
-                textBox.Clear();
+                _customTextBox.Clear();
             }
             else
             {

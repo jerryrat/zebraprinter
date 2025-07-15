@@ -329,6 +329,55 @@ namespace ZebraPrinterMonitor.Services
             e.HasMorePages = false;
         }
 
+        public string GeneratePrintContent(TestRecord record, string templateName = "Default")
+        {
+            try
+            {
+                var template = PrintTemplateManager.GetTemplate(templateName) ?? PrintTemplateManager.GetDefaultTemplate();
+                
+                if (template == null)
+                {
+                    Logger.Warning($"未找到模板 '{templateName}'，使用默认内容");
+                    return GenerateDefaultContent(record);
+                }
+
+                var content = template.Content;
+                
+                // 替换模板中的占位符
+                content = content.Replace("{SerialNumber}", record.TR_SerialNum ?? "N/A");
+                content = content.Replace("{TestDateTime}", record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
+                content = content.Replace("{Current}", record.FormatNumber(record.TR_Isc) + " A");
+                content = content.Replace("{Voltage}", record.FormatNumber(record.TR_Voc) + " V");
+                content = content.Replace("{VoltageVpm}", record.FormatNumber(record.TR_Vpm) + " V");
+                content = content.Replace("{Power}", record.FormatNumber(record.TR_Ipm) + " W");
+                content = content.Replace("{PrintCount}", record.TR_Print.ToString());
+                
+                return content;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"生成打印内容失败: {ex.Message}", ex);
+                return GenerateDefaultContent(record);
+            }
+        }
+
+        private string GenerateDefaultContent(TestRecord record)
+        {
+            return $@"
+====================================
+        太阳能电池测试标签
+====================================
+序列号: {record.TR_SerialNum ?? "N/A"}
+测试时间: {record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}
+短路电流: {record.FormatNumber(record.TR_Isc)} A
+开路电压: {record.FormatNumber(record.TR_Voc)} V
+最大功率电压: {record.FormatNumber(record.TR_Vpm)} V
+ 最大功率: {record.FormatNumber(record.TR_Ipm)} W
+打印次数: {record.TR_Print}
+====================================
+";
+        }
+
         private void ProcessPrePrintedLabelPrint(PrintPageEventArgs e, Font defaultFont, SolidBrush brush)
         {
             var lines = _currentPrintContent.Split('\n');

@@ -12,11 +12,50 @@ namespace ZebraPrinterMonitor.Models
 
     public class AppConfig
     {
-        public string Version { get; set; } = "1.1.42";
+        public string Version { get; set; } = "1.1.43";
         public DatabaseConfig Database { get; set; } = new();
         public PrinterConfig Printer { get; set; } = new();
         public ApplicationConfig Application { get; set; } = new();
         public UIConfig UI { get; set; } = new();
+
+        public void Initialize()
+        {
+            Database = new DatabaseConfig
+            {
+                DatabasePath = "",
+                TableName = "TestRecord",
+                MonitorField = "TR_SerialNum",
+                PollInterval = 1000,
+                EnablePrintCount = false
+            };
+
+            Application = new ApplicationConfig
+            {
+                LogLevel = "Info",
+                StartMinimized = false,
+                MinimizeToTray = true,
+                AutoStartMonitoring = false
+            };
+
+            Printer = new PrinterConfig
+            {
+                PrinterName = "",
+                PrintFormat = "Text",
+                AutoPrint = true,
+                DefaultTemplate = "Default",
+                EnablePrintCount = true
+            };
+
+            UI = new UIConfig
+            {
+                Language = "zh-CN",
+                EnableSystemTray = true,
+                StartMinimized = false
+            };
+
+            // 设置版本号
+            Version = "1.1.44";
+        }
     }
 
     public class DatabaseConfig
@@ -35,6 +74,7 @@ namespace ZebraPrinterMonitor.Models
         public bool AutoPrint { get; set; } = true;
         public string PrintFormat { get; set; } = "Text";
         public string DefaultTemplate { get; set; } = "默认文本模板";
+        public bool EnablePrintCount { get; set; } = false; // Added this property
     }
 
     public class ApplicationConfig
@@ -51,6 +91,8 @@ namespace ZebraPrinterMonitor.Models
         public string Theme { get; set; } = "Default";
         public int WindowWidth { get; set; } = 1200;
         public int WindowHeight { get; set; } = 800;
+        public bool EnableSystemTray { get; set; } = true; // Added this property
+        public bool StartMinimized { get; set; } = false; // Added this property
     }
 
     public class TestRecord

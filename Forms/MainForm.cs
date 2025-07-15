@@ -7,30 +7,39 @@ using ZebraPrinterMonitor.Services;
 using ZebraPrinterMonitor.Utils;
 using System.IO; // Added for Path and File
 using System.Text; // Added for Encoding
+using System.Collections.Generic; // Added for List
 
 namespace ZebraPrinterMonitor.Forms
 {
     public partial class MainForm : Form
     {
-        private readonly DatabaseMonitor _databaseMonitor;
-        private readonly PrinterService _printerService;
+
+
+        // 实例变量
+        private DatabaseMonitor _databaseMonitor;
+        private PrinterService _printerService;
         private NotifyIcon _notifyIcon;
+        private System.Windows.Forms.Timer _statusUpdateTimer;
         private PrintPreviewForm? _printPreviewForm;
         private int _totalRecordsProcessed = 0;
         private int _totalPrintJobs = 0;
+        private DateTime _lastRecordTime = DateTime.Now;
 
         public MainForm()
         {
             InitializeComponent();
+            InitializeServices();
+            InitializeNotifyIcon();
+            InitializeTimer();
             
-            _databaseMonitor = new DatabaseMonitor();
-            _printerService = new PrinterService();
+            // 窗体事件
+            this.Load += OnFormLoad;
+            this.Resize += OnFormResize;
+            this.FormClosing += OnFormClosing;
             
-            SetupNotifyIcon();
-            SetupEventHandlers();
-            InitializeUI();
-            
-            Logger.Info("主窗体初始化完成");
+            // 控件事件
+            chkAutoPrint.CheckedChanged += OnAutoPrintChanged;
+            cmbPrintFormat.SelectedIndexChanged += OnPrintFormatChanged;
         }
 
         private void SetupNotifyIcon()
@@ -109,7 +118,7 @@ namespace ZebraPrinterMonitor.Forms
                 _notifyIcon = new NotifyIcon
                 {
                     Icon = zebraIcon ?? SystemIcons.Application, // 如果找不到Zebra图标则使用默认图标
-                    Text = "太阳能电池测试打印监控系统 v1.1.42",
+                    Text = "太阳能电池测试打印监控系统 v1.1.43",
                     Visible = false
                 };
 
@@ -173,7 +182,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.42";
+            this.Text = "太阳能电池测试打印监控系统 v1.1.43";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -282,40 +291,56 @@ namespace ZebraPrinterMonitor.Forms
                 var printers = _printerService.GetAvailablePrinters();
                 cmbPrinter.Items.Clear();
                 cmbPrinter.Items.AddRange(printers.ToArray());
-
+                
+                // 恢复保存的打印机选择
                 var config = ConfigurationManager.Config;
-                if (!string.IsNullOrEmpty(config.Printer.PrinterName) && 
-                    printers.Contains(config.Printer.PrinterName))
+                if (!string.IsNullOrEmpty(config.Printer.PrinterName))
                 {
-                    cmbPrinter.SelectedItem = config.Printer.PrinterName;
+                    var printerIndex = cmbPrinter.FindString(config.Printer.PrinterName);
+                    if (printerIndex >= 0)
+                    {
+                        cmbPrinter.SelectedIndex = printerIndex;
+                        lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatusOK");
+                        lblPrinterStatus.ForeColor = Color.Green;
+                    }
+                    else
+                    {
+                        lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatusError");
+                        lblPrinterStatus.ForeColor = Color.Red;
+                    }
                 }
-                else if (cmbPrinter.Items.Count > 0)
+                else
                 {
-                    cmbPrinter.SelectedIndex = 0;
+                    lblPrinterStatus.Text = LanguageManager.GetString("PrinterStatus");
+                    lblPrinterStatus.ForeColor = Color.Gray;
                 }
-
-                lblPrinterStatus.Text = $"找到 {printers.Count} 个打印机";
-                lblPrinterStatus.ForeColor = printers.Count > 0 ? Color.Green : Color.Red;
+                
+                Logger.Info($"已更新打印机列表，共发现 {printers.Count} 台打印机");
             }
             catch (Exception ex)
             {
                 Logger.Error($"更新打印机列表失败: {ex.Message}", ex);
-                lblPrinterStatus.Text = "获取打印机列表失败";
+                lblPrinterStatus.Text = LanguageManager.GetString("GetPrinterListFailed");
                 lblPrinterStatus.ForeColor = Color.Red;
             }
         }
 
         private void UpdateStatusDisplay()
         {
-            lblMonitoringStatus.Text = _databaseMonitor.IsMonitoring ? "监控中..." : "已停止";
-            lblMonitoringStatus.ForeColor = _databaseMonitor.IsMonitoring ? Color.Green : Color.Red;
+            if (_databaseMonitor.IsMonitoring)
+            {
+                lblMonitoringStatus.Text = LanguageManager.GetString("MonitoringStatusRunning");
+                lblMonitoringStatus.ForeColor = Color.Green;
+            }
+            else
+            {
+                lblMonitoringStatus.Text = LanguageManager.GetString("MonitoringStatusStopped");
+                lblMonitoringStatus.ForeColor = Color.Red;
+            }
             
-            btnStartMonitoring.Enabled = !_databaseMonitor.IsMonitoring;
-            btnStopMonitoring.Enabled = _databaseMonitor.IsMonitoring;
-            
-            lblTotalRecords.Text = $"处理记录: {_totalRecordsProcessed}";
-            lblTotalPrints.Text = $"打印任务: {_totalPrintJobs}";
-            lblLastRecord.Text = $"最后记录: {_databaseMonitor.LastRecordId}";
+            lblTotalRecords.Text = $"{LanguageManager.GetString("ProcessedRecords")}: {_totalRecordsProcessed}";
+            lblTotalPrints.Text = $"{LanguageManager.GetString("PrintJobs")}: {_totalPrintJobs}";
+            lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: {_lastRecordTime:yyyy-MM-dd HH:mm:ss}";
         }
 
         private void OnNewRecordFound(object? sender, TestRecord record)
@@ -427,7 +452,7 @@ namespace ZebraPrinterMonitor.Forms
 
         private void AddLogMessage(string message)
         {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var logEntry = $"[{timestamp}] {message}";
             
             txtLog.AppendText(logEntry + Environment.NewLine);
@@ -501,7 +526,7 @@ namespace ZebraPrinterMonitor.Forms
             {
                 this.Hide();
                 _notifyIcon.Visible = true;
-                ShowNotification("程序已最小化到系统托盘", "双击托盘图标可恢复窗口");
+                ShowNotification(LanguageManager.GetString("TrayNotificationTitle"), LanguageManager.GetString("TrayNotificationMessage"));
             }
         }
 
@@ -512,7 +537,7 @@ namespace ZebraPrinterMonitor.Forms
                 e.Cancel = true;
                 this.Hide();
                 _notifyIcon.Visible = true;
-                ShowNotification("程序已最小化到系统托盘", "程序仍在后台运行");
+                ShowNotification(LanguageManager.GetString("TrayNotificationTitle"), LanguageManager.GetString("TrayNotificationMessage"));
             }
             else
             {
@@ -844,7 +869,7 @@ namespace ZebraPrinterMonitor.Forms
         private void UpdateUILanguage()
         {
             // 更新主窗体标题
-            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.42";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.43";
             
             // 更新选项卡标题
             if (tabControl1.TabPages.Count >= 4)
@@ -922,12 +947,13 @@ namespace ZebraPrinterMonitor.Forms
                 // 创建或显示预览窗口
                 if (_printPreviewForm == null || _printPreviewForm.IsDisposed)
                 {
-                    _printPreviewForm = new PrintPreviewForm();
+                    _printPreviewForm = new PrintPreviewForm(recordToPreview, _printerService);
                     _printPreviewForm.PrintRequested += OnPrintPreviewRequested;
                 }
                 
                 // 加载记录和设置自动打印状态
-                _printPreviewForm.LoadRecord(recordToPreview, chkAutoPrint.Checked);
+                _printPreviewForm.LoadRecord(recordToPreview);
+                _printPreviewForm.SetAutoPrintMode(chkAutoPrint.Checked);
                 
                 // 显示窗口
                 if (_printPreviewForm.Visible)
@@ -950,55 +976,23 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
-        private void OnPrintPreviewRequested(object? sender, TestRecord record)
+        private void OnPrintPreviewRequested(object? sender, EventArgs e)
         {
-            try
+            // 处理打印预览请求
+            if (lvRecords.SelectedItems.Count > 0)
             {
-                // 执行打印
-                var config = ConfigurationManager.Config;
-                var templateName = config.Printer.DefaultTemplate;
+                var selectedItem = lvRecords.SelectedItems[0];
+                var record = selectedItem.Tag as TestRecord;
                 
-                var printResult = _printerService.PrintRecord(record, config.Printer.PrintFormat, templateName);
-                
-                if (printResult.Success)
+                if (record != null)
                 {
-                    _totalPrintJobs++;
-                    UpdateStatusDisplay();
-                    AddLogMessage($"通过预览窗口打印成功: {record.TR_SerialNum}, 打印机: {printResult.PrinterUsed}");
-                    
-                    // 刷新记录列表
-                    LoadRecentRecords();
+                    // 执行打印
+                    btnManualPrint_Click(null, EventArgs.Empty);
                 }
-                else
-                {
-                    var errorMsg = $"通过预览窗口打印失败: {printResult.ErrorMessage}";
-                    AddLogMessage(errorMsg);
-                    MessageBox.Show(errorMsg, "打印错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"预览窗口打印处理失败: {ex.Message}", ex);
-                AddLogMessage($"预览窗口打印处理失败: {ex.Message}");
             }
         }
 
-        private void OnAutoPrintChanged(object? sender, EventArgs e)
-        {
-            try
-            {
-                // 如果预览窗口已打开，同步更新按钮状态
-                if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
-                {
-                    _printPreviewForm.SetAutoPrintMode(chkAutoPrint.Checked);
-                    Logger.Info($"同步更新预览窗口自动打印状态: {chkAutoPrint.Checked}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"更新预览窗口自动打印状态失败: {ex.Message}", ex);
-            }
-        }
+
 
         private void OnPrintFormatChanged(object? sender, EventArgs e)
         {
@@ -1076,61 +1070,316 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
+        private void InitializeServices()
+        {
+            _databaseMonitor = new DatabaseMonitor();
+            _printerService = new PrinterService();
+            Logger.Info("服务初始化完成");
+        }
+
+        private void InitializeNotifyIcon()
+        {
+            _notifyIcon = new NotifyIcon
+            {
+                Text = LanguageManager.GetString("MainTitle"),
+                Icon = SystemIcons.Application,
+                Visible = false
+            };
+            
+            var contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add(LanguageManager.GetString("ShowMainWindow"), null, (s, e) => {
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+                this.BringToFront();
+            });
+            contextMenu.Items.Add(LanguageManager.GetString("ExitProgram"), null, (s, e) => {
+                Application.Exit();
+            });
+            
+            _notifyIcon.ContextMenuStrip = contextMenu;
+            _notifyIcon.DoubleClick += (s, e) => {
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+                this.BringToFront();
+            };
+        }
+
+        private void InitializeTimer()
+        {
+            _statusUpdateTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 1000, // 1秒更新一次状态
+                Enabled = true
+            };
+            _statusUpdateTimer.Tick += (s, e) => UpdateStatusDisplay();
+        }
+
+        private void OnAutoPrintChanged(object? sender, EventArgs e)
+        {
+            try
+            {
+                var config = ConfigurationManager.Config;
+                config.Printer.AutoPrint = chkAutoPrint.Checked;
+                ConfigurationManager.SaveConfig();
+                
+                var status = chkAutoPrint.Checked ? LanguageManager.GetString("Enabled") : LanguageManager.GetString("Disabled");
+                AddLogMessage($"{LanguageManager.GetString("AutoPrint")} {status}");
+                
+                // 如果预览窗口已打开，同步更新按钮状态
+                if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                {
+                    _printPreviewForm.SetAutoPrintMode(chkAutoPrint.Checked);
+                    Logger.Info($"同步更新预览窗口自动打印状态: {chkAutoPrint.Checked}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"更新自动打印状态失败: {ex.Message}", ex);
+            }
+        }
+
+
+
+        private List<FieldPosition> GetFieldPositionsFromUI()
+        {
+            // 这里应该返回从UI中获取的字段位置信息
+            // 现在先返回空列表
+            return new List<FieldPosition>();
+        }
+
         private void chkPrePrintedLabel_CheckedChanged(object? sender, EventArgs e)
         {
-            var checkbox = sender as CheckBox;
-            if (checkbox == null) return;
-
-            // 在模板编辑器中查找相关控件
-            var templateEditor = grpTemplateEditor;
-            var txtContent = templateEditor.Controls.OfType<TextBox>().FirstOrDefault(c => c.Name == "txtTemplateContent" || c.Multiline);
-            var pnlDesign = templateEditor.Controls.OfType<Panel>().FirstOrDefault();
-            var grpFieldPos = templateEditor.Controls.OfType<GroupBox>().FirstOrDefault(g => g.Text == "字段位置设置");
-
-            if (txtContent != null && pnlDesign != null && grpFieldPos != null)
+            // 切换预印刷标签模式
+            var isPrePrintedMode = chkPrePrintedLabel.Checked;
+            
+            // 显示/隐藏相关控件
+            txtTemplateContent.Visible = !isPrePrintedMode;
+            pnlPrePrintedDesign.Visible = isPrePrintedMode;
+            grpFieldPosition.Visible = isPrePrintedMode;
+            
+            if (isPrePrintedMode)
             {
-                if (checkbox.Checked)
+                // 初始化预印刷模式
+                InitializePrePrintedMode();
+            }
+        }
+
+        private void InitializePrePrintedMode()
+        {
+            // 初始化预印刷模式的UI
+            pnlPrePrintedDesign.Paint += (s, e) => {
+                // 绘制网格
+                var g = e.Graphics;
+                var pen = new Pen(Color.LightGray, 1);
+                
+                // 绘制垂直线
+                for (int x = 0; x < pnlPrePrintedDesign.Width; x += 20)
                 {
-                    // 切换到预印刷标签模式
-                    txtContent.Visible = false;
-                    pnlDesign.Visible = true;
-                    grpFieldPos.Visible = true;
-                    
-                    // 清空设计面板并添加网格
-                    pnlDesign.Controls.Clear();
-                    DrawGridOnPanel(pnlDesign);
+                    g.DrawLine(pen, x, 0, x, pnlPrePrintedDesign.Height);
                 }
-                else
+                
+                // 绘制水平线
+                for (int y = 0; y < pnlPrePrintedDesign.Height; y += 20)
                 {
-                    // 切换回普通文本模式
-                    txtContent.Visible = true;
-                    pnlDesign.Visible = false;
-                    grpFieldPos.Visible = false;
+                    g.DrawLine(pen, 0, y, pnlPrePrintedDesign.Width, y);
+                }
+                
+                pen.Dispose();
+            };
+        }
+
+        private void btnAddField_Click(object? sender, EventArgs e)
+        {
+            // 添加字段位置
+            if (cmbFieldSelect.SelectedItem != null)
+            {
+                // 这里应该实现添加字段的逻辑
+                AddLogMessage($"添加字段: {cmbFieldSelect.SelectedItem}");
+            }
+        }
+
+        private void btnUpdateField_Click(object? sender, EventArgs e)
+        {
+            // 更新字段位置
+            if (cmbFieldSelect.SelectedItem != null)
+            {
+                // 这里应该实现更新字段的逻辑
+                AddLogMessage($"更新字段: {cmbFieldSelect.SelectedItem}");
+            }
+        }
+
+        private void btnRemoveField_Click(object? sender, EventArgs e)
+        {
+            // 删除字段位置
+            if (cmbFieldSelect.SelectedItem != null)
+            {
+                // 这里应该实现删除字段的逻辑
+                AddLogMessage($"删除字段: {cmbFieldSelect.SelectedItem}");
+            }
+        }
+
+        private void lvRecords_DoubleClick(object? sender, EventArgs e)
+        {
+            btnManualPrint_Click(sender, e);
+        }
+
+        private Label? _selectedFieldControl;
+        private bool _isDragging = false;
+        private Point _dragOffset;
+
+        private void FieldControl_MouseDown(object? sender, MouseEventArgs e)
+        {
+            if (sender is Label label)
+            {
+                _selectedFieldControl = label;
+                _isDragging = true;
+                _dragOffset = e.Location;
+                
+                // 更新字段设置界面
+                UpdateFieldSettingsUI(label.Tag as FieldPosition);
+                
+                // 高亮选中的字段
+                foreach (Control control in label.Parent.Controls)
+                {
+                    if (control is Label fieldLabel)
+                    {
+                        fieldLabel.BackColor = fieldLabel == label ? Color.Yellow : Color.LightBlue;
+                    }
                 }
             }
         }
 
-        private void DrawGridOnPanel(Panel panel)
+        private void FieldControl_MouseMove(object? sender, MouseEventArgs e)
         {
-            panel.Paint += (sender, e) =>
+            if (_isDragging && sender is Label label)
             {
-                var g = e.Graphics;
-                var gridSize = 20;
-                var pen = new Pen(Color.LightGray, 1);
+                var newLocation = new Point(
+                    label.Location.X + e.X - _dragOffset.X,
+                    label.Location.Y + e.Y - _dragOffset.Y);
                 
-                // 绘制垂直线
-                for (int x = 0; x < panel.Width; x += gridSize)
+                // 限制在面板范围内
+                if (newLocation.X >= 0 && newLocation.Y >= 0 && 
+                    newLocation.X + label.Width <= label.Parent.Width &&
+                    newLocation.Y + label.Height <= label.Parent.Height)
                 {
-                    g.DrawLine(pen, x, 0, x, panel.Height);
+                    label.Location = newLocation;
+                    
+                    // 更新字段位置信息
+                    if (label.Tag is FieldPosition fieldPos)
+                    {
+                        fieldPos.X = newLocation.X;
+                        fieldPos.Y = newLocation.Y;
+                    }
+                }
+            }
+        }
+
+        private void FieldControl_MouseUp(object? sender, MouseEventArgs e)
+        {
+            _isDragging = false;
+            
+            // 更新界面中的位置显示
+            if (_selectedFieldControl?.Tag is FieldPosition fieldPos)
+            {
+                UpdateFieldSettingsUI(fieldPos);
+            }
+        }
+
+        private void FieldControl_Click(object? sender, EventArgs e)
+        {
+            if (sender is Label label)
+            {
+                _selectedFieldControl = label;
+                UpdateFieldSettingsUI(label.Tag as FieldPosition);
+                
+                // 高亮选中的字段
+                foreach (Control control in label.Parent.Controls)
+                {
+                    if (control is Label fieldLabel)
+                    {
+                        fieldLabel.BackColor = fieldLabel == label ? Color.Yellow : Color.LightBlue;
+                    }
+                }
+            }
+        }
+
+        private void UpdateFieldSettingsUI(FieldPosition? fieldPos)
+        {
+            if (fieldPos == null) return;
+
+            var templateEditor = grpTemplateEditor;
+            var cmbFieldSelect = FindControlByName<ComboBox>(templateEditor, "cmbFieldSelect");
+            var numPosX = FindControlByName<NumericUpDown>(templateEditor, "numPosX");
+            var numPosY = FindControlByName<NumericUpDown>(templateEditor, "numPosY");
+            var numWidth = FindControlByName<NumericUpDown>(templateEditor, "numWidth");
+            var cmbAlignment = FindControlByName<ComboBox>(templateEditor, "cmbAlignment");
+            var chkValueOnly = FindControlByName<CheckBox>(templateEditor, "chkValueOnly");
+
+            if (cmbFieldSelect != null)
+            {
+                for (int i = 0; i < cmbFieldSelect.Items.Count; i++)
+                {
+                    if (cmbFieldSelect.Items[i].ToString() == fieldPos.FieldName)
+                    {
+                        cmbFieldSelect.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (numPosX != null) numPosX.Value = fieldPos.X;
+            if (numPosY != null) numPosY.Value = fieldPos.Y;
+            if (numWidth != null) numWidth.Value = fieldPos.Width;
+            if (cmbAlignment != null) cmbAlignment.SelectedItem = fieldPos.Alignment.ToString();
+            if (chkValueOnly != null) chkValueOnly.Checked = fieldPos.ValueOnly;
+        }
+
+        private T? FindControlByName<T>(Control parent, string name) where T : Control
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (control is T typedControl && (control.Name == name || control.GetType().Name.Contains(name.Replace("cmb", "ComboBox").Replace("num", "NumericUpDown").Replace("chk", "CheckBox").Replace("pnl", "Panel"))))
+                {
+                    return typedControl;
                 }
                 
-                // 绘制水平线
-                for (int y = 0; y < panel.Height; y += gridSize)
-                {
-                    g.DrawLine(pen, 0, y, panel.Width, y);
-                }
-                
-                pen.Dispose();
+                var found = FindControlByName<T>(control, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private string GetFieldSampleValue(string fieldName)
+        {
+            return fieldName switch
+            {
+                "{SerialNumber}" => "ABC123456",
+                "{TestDateTime}" => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                "{ShortCircuitCurrent}" => "10.25",
+                "{OpenCircuitVoltage}" => "24.5",
+                "{MaxPowerVoltage}" => "20.8",
+                "{MaxPower}" => "250.5",
+                "{MaxPowerCurrent}" => "12.04",
+                "{PrintCount}" => "1",
+                "{CurrentTime}" => DateTime.Now.ToString("HH:mm:ss"),
+                "{CurrentDate}" => DateTime.Now.ToString("yyyy-MM-dd"),
+                _ => "示例值"
+            };
+        }
+
+        private string GetFieldDisplayName(string fieldName)
+        {
+            var descriptions = PrintTemplateManager.GetFieldDescriptions();
+            return descriptions.TryGetValue(fieldName, out var description) ? description : fieldName;
+        }
+
+        private ContentAlignment GetContentAlignment(string alignment)
+        {
+            return alignment switch
+            {
+                "Right" => ContentAlignment.MiddleRight,
+                "Center" => ContentAlignment.MiddleCenter,
+                _ => ContentAlignment.MiddleLeft
             };
         }
 

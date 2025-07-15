@@ -108,14 +108,21 @@ namespace ZebraPrinterMonitor.Services
                 return ProcessPrePrintedLabelTemplate(template, record);
             }
             
-            // 替换模板变量
+            // 替换模板变量 - 使用规范化的字段名称
             content = content.Replace("{SerialNumber}", record.TR_SerialNum ?? "N/A");
             content = content.Replace("{TestDateTime}", record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
+            content = content.Replace("{ShortCircuitCurrent}", record.FormatNumber(record.TR_Isc));
+            content = content.Replace("{OpenCircuitVoltage}", record.FormatNumber(record.TR_Voc));
+            content = content.Replace("{MaxPowerVoltage}", record.FormatNumber(record.TR_Vpm));
+            content = content.Replace("{MaxPower}", record.FormatNumber(record.TR_Pm));
+            content = content.Replace("{MaxPowerCurrent}", record.FormatNumber(record.TR_Ipm));
+            content = content.Replace("{PrintCount}", (record.TR_Print ?? 0).ToString());
+
+            // 保持向后兼容性 - 兼容旧的字段名称
             content = content.Replace("{Current}", record.FormatNumber(record.TR_Isc));
             content = content.Replace("{Voltage}", record.FormatNumber(record.TR_Voc));
             content = content.Replace("{VoltageVpm}", record.FormatNumber(record.TR_Vpm));
             content = content.Replace("{Power}", record.FormatNumber(record.TR_Pm));
-            content = content.Replace("{PrintCount}", (record.TR_Print ?? 0).ToString());
 
             // 添加时间戳
             content = content.Replace("{CurrentTime}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -151,13 +158,19 @@ namespace ZebraPrinterMonitor.Services
             {
                 "{SerialNumber}" => record.TR_SerialNum ?? "N/A",
                 "{TestDateTime}" => record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A",
+                "{ShortCircuitCurrent}" => record.FormatNumber(record.TR_Isc),
+                "{OpenCircuitVoltage}" => record.FormatNumber(record.TR_Voc),
+                "{MaxPowerVoltage}" => record.FormatNumber(record.TR_Vpm),
+                "{MaxPower}" => record.FormatNumber(record.TR_Pm),
+                "{MaxPowerCurrent}" => record.FormatNumber(record.TR_Ipm),
+                "{PrintCount}" => (record.TR_Print ?? 0).ToString(),
+                "{CurrentTime}" => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                "{CurrentDate}" => DateTime.Now.ToString("yyyy-MM-dd"),
+                // 保持向后兼容性
                 "{Current}" => record.FormatNumber(record.TR_Isc),
                 "{Voltage}" => record.FormatNumber(record.TR_Voc),
                 "{VoltageVpm}" => record.FormatNumber(record.TR_Vpm),
                 "{Power}" => record.FormatNumber(record.TR_Pm),
-                "{PrintCount}" => (record.TR_Print ?? 0).ToString(),
-                "{CurrentTime}" => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                "{CurrentDate}" => DateTime.Now.ToString("yyyy-MM-dd"),
                 _ => "N/A"
             };
         }
@@ -194,10 +207,11 @@ namespace ZebraPrinterMonitor.Services
             {
                 "{SerialNumber}",
                 "{TestDateTime}",
-                "{Current}",
-                "{Voltage}",
-                "{VoltageVpm}",
-                "{Power}",
+                "{ShortCircuitCurrent}",
+                "{OpenCircuitVoltage}",
+                "{MaxPowerVoltage}",
+                "{MaxPower}",
+                "{MaxPowerCurrent}",
                 "{PrintCount}",
                 "{CurrentTime}",
                 "{CurrentDate}"
@@ -208,13 +222,14 @@ namespace ZebraPrinterMonitor.Services
         {
             return new Dictionary<string, string>
             {
-                ["{SerialNumber}"] = LanguageManager.GetString("SerialNumber", "序列号"),
-                ["{TestDateTime}"] = LanguageManager.GetString("TestDateTime", "测试时间"),
-                ["{Current}"] = LanguageManager.GetString("Current", "电流(A)"),
-                ["{Voltage}"] = LanguageManager.GetString("Voltage", "电压(V)"),
-                ["{VoltageVpm}"] = LanguageManager.GetString("VoltageVpm", "Vpm电压(V)"),
-                ["{Power}"] = LanguageManager.GetString("Power", "功率(W)"),
-                ["{PrintCount}"] = LanguageManager.GetString("PrintCount", "打印次数"),
+                ["{SerialNumber}"] = "序列号",
+                ["{TestDateTime}"] = "测试时间",
+                ["{ShortCircuitCurrent}"] = "短路电流(A)", // TR_Isc
+                ["{OpenCircuitVoltage}"] = "开路电压(V)", // TR_Voc
+                ["{MaxPowerVoltage}"] = "最大功率电压(V)", // TR_Vpm
+                ["{MaxPower}"] = "最大功率(W)", // TR_Pm
+                ["{MaxPowerCurrent}"] = "最大功率电流(A)", // TR_Ipm
+                ["{PrintCount}"] = "打印次数",
                 ["{CurrentTime}"] = "当前时间",
                 ["{CurrentDate}"] = "当前日期"
             };
@@ -338,7 +353,7 @@ Module Protection: Class II",
                         },
                         new FieldPosition
                         {
-                            FieldName = "{Power}",
+                            FieldName = "{MaxPower}",
                             X = 400,
                             Y = 100,
                             Width = 150,
@@ -348,7 +363,7 @@ Module Protection: Class II",
                         },
                         new FieldPosition
                         {
-                            FieldName = "{Voltage}",
+                            FieldName = "{OpenCircuitVoltage}",
                             X = 400,
                             Y = 150,
                             Width = 150,
@@ -358,7 +373,7 @@ Module Protection: Class II",
                         },
                         new FieldPosition
                         {
-                            FieldName = "{Current}",
+                            FieldName = "{ShortCircuitCurrent}",
                             X = 400,
                             Y = 200,
                             Width = 150,
@@ -368,9 +383,19 @@ Module Protection: Class II",
                         },
                         new FieldPosition
                         {
-                            FieldName = "{VoltageVpm}",
+                            FieldName = "{MaxPowerVoltage}",
                             X = 400,
                             Y = 250,
+                            Width = 150,
+                            Alignment = TextAlignment.Right,
+                            ValueOnly = true,
+                            FontSize = "12"
+                        },
+                        new FieldPosition
+                        {
+                            FieldName = "{MaxPowerCurrent}",
+                            X = 400,
+                            Y = 300,
                             Width = 150,
                             Alignment = TextAlignment.Right,
                             ValueOnly = true,

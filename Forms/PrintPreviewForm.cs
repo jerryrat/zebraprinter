@@ -9,177 +9,137 @@ namespace ZebraPrinterMonitor.Forms
 {
     public partial class PrintPreviewForm : Form
     {
-        private TestRecord? _currentRecord;
+        private readonly TestRecord _record;
         private readonly PrinterService _printerService;
-        private bool _autoPrintEnabled;
         
-        public event EventHandler<TestRecord>? PrintRequested;
-
-        public PrintPreviewForm()
+        public PrintPreviewForm(TestRecord record, PrinterService printerService)
         {
+            _record = record;
+            _printerService = printerService;
+            
             InitializeComponent();
-            _printerService = new PrinterService();
-            UpdateButtonStates();
+            LoadPreviewData();
         }
-
-        public void LoadRecord(TestRecord record, bool autoPrintEnabled = false)
+        
+        private void LoadPreviewData()
         {
-            _currentRecord = record;
-            _autoPrintEnabled = autoPrintEnabled;
-            
-            // 更新序列号显示 - 删除emoji，只显示序列号
-            if (!string.IsNullOrEmpty(record.TR_SerialNum))
-            {
-                lblSerialNumber.Text = record.TR_SerialNum;
-            }
-            else
-            {
-                lblSerialNumber.Text = "N/A";
-            }
-
-            // 生成预览内容
-            UpdatePreviewContent();
-            
-            // 更新按钮状态
-            UpdateButtonStates();
-        }
-
-        private void UpdatePreviewContent()
-        {
-            if (_currentRecord == null)
-            {
-                rtbPreviewContent.Text = "没有可预览的数据";
-                return;
-            }
-
             try
             {
-                var config = ConfigurationManager.Config;
-                var templateName = config.Printer.DefaultTemplate;
-                
-                // 获取打印模板并处理
-                var template = PrintTemplateManager.GetTemplate(templateName);
-                if (template == null)
+                if (_record != null)
                 {
-                    template = PrintTemplateManager.GetDefaultTemplate();
+                    lblSerialNumber.Text = _record.TR_SerialNum ?? LanguageManager.GetString("NA");
+                    
+                    // 加载并显示打印内容
+                    var config = ConfigurationManager.Config;
+                    var templateName = config.Printer.DefaultTemplate;
+                    var content = _printerService.GeneratePrintContent(_record, templateName);
+                    
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        rtbPreviewContent.Text = content;
+                    }
+                    else
+                    {
+                        rtbPreviewContent.Text = LanguageManager.GetString("NoPreviewData");
+                    }
+                    
+                    // 检查是否启用了自动打印
+                    if (config.Printer.AutoPrint)
+                    {
+                        btnConfirmPrint.Text = LanguageManager.GetString("AutoPrintEnabled");
+                        btnConfirmPrint.Enabled = false;
+                    }
+                    else
+                    {
+                        btnConfirmPrint.Text = LanguageManager.GetString("ConfirmPrint");
+                        btnConfirmPrint.Enabled = true;
+                    }
                 }
-
-                var processedContent = PrintTemplateManager.ProcessTemplate(template, _currentRecord);
-                
-                // 简化显示内容 - 只显示核心打印内容
-                rtbPreviewContent.Clear();
-                
-                // 直接显示处理后的打印内容，使用统一的等宽字体确保对齐效果
-                rtbPreviewContent.SelectionFont = new Font("Consolas", 10F, FontStyle.Regular);
-                rtbPreviewContent.SelectionColor = Color.FromArgb(33, 37, 41);
-                rtbPreviewContent.AppendText(processedContent);
-                
-                // 滚动到顶部
-                rtbPreviewContent.SelectionStart = 0;
-                rtbPreviewContent.ScrollToCaret();
+                else
+                {
+                    lblSerialNumber.Text = LanguageManager.GetString("NA");
+                    rtbPreviewContent.Text = LanguageManager.GetString("NoPreviewData");
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error($"预览内容生成失败: {ex.Message}", ex);
-                rtbPreviewContent.Text = $"预览内容生成失败:\n{ex.Message}";
+                MessageBox.Show($"{LanguageManager.GetString("LoadPreviewError")}: {ex.Message}", 
+                    LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void UpdateButtonStates()
+        
+        private void btnConfirmPrint_Click(object sender, EventArgs e)
         {
-            // 当自动打印启用时，确认打印按钮失效
-            btnConfirmPrint.Enabled = !_autoPrintEnabled && _currentRecord != null;
-            
-            if (_autoPrintEnabled)
-            {
-                btnConfirmPrint.Text = "自动打印已启用";
-                btnConfirmPrint.BackColor = Color.Gray;
-            }
-            else
-            {
-                btnConfirmPrint.Text = "确认打印";
-                btnConfirmPrint.BackColor = Color.FromArgb(0, 122, 204);
-            }
-        }
-
-        private void btnConfirmPrint_Click(object? sender, EventArgs e)
-        {
-            if (_currentRecord == null || _autoPrintEnabled)
-            {
-                return;
-            }
-
             try
             {
-                // 触发打印事件
-                PrintRequested?.Invoke(this, _currentRecord);
-                
-                // 显示打印确认
-                MessageBox.Show("打印任务已发送", "打印确认", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
-                // 关闭窗口
-                this.Close();
+                if (_record != null)
+                {
+                    var config = ConfigurationManager.Config;
+                    var templateName = config.Printer.DefaultTemplate;
+                    var printResult = _printerService.PrintRecord(_record, config.Printer.PrintFormat, templateName);
+                    
+                    if (printResult.Success)
+                    {
+                        MessageBox.Show(LanguageManager.GetString("PrintCompleted"), 
+                            LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{LanguageManager.GetString("PrintFailed")}: {printResult.ErrorMessage}", 
+                            LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error($"确认打印失败: {ex.Message}", ex);
-                MessageBox.Show($"打印失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("PrintError")}: {ex.Message}", 
+                    LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void btnClose_Click(object? sender, EventArgs e)
+        
+        private void btnShowMain_Click(object sender, EventArgs e)
+        {
+            // 显示主窗口
+            var mainForm = Application.OpenForms["MainForm"];
+            if (mainForm != null)
+            {
+                mainForm.Show();
+                mainForm.WindowState = FormWindowState.Normal;
+                mainForm.BringToFront();
+            }
+        }
+        
+        private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
         }
 
-        private void btnShowMain_Click(object? sender, EventArgs e)
+        public void RefreshPreview()
         {
-            try
-            {
-                // 显示主窗口并将其置于前台
-                if (this.Owner != null)
-                {
-                    this.Owner.Show();
-                    this.Owner.WindowState = FormWindowState.Normal;
-                    this.Owner.BringToFront();
-                    this.Owner.Activate();
-                    
-                    Logger.Info("主窗口已显示并置于前台");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"显示主窗口失败: {ex.Message}", ex);
-            }
+            LoadPreviewData();
+        }
+
+        public event EventHandler? PrintRequested;
+
+        public void LoadRecord(TestRecord record)
+        {
+            // 由于_record是readonly，我们需要重新创建预览内容
+            RefreshPreview();
         }
 
         public void SetAutoPrintMode(bool enabled)
         {
-            _autoPrintEnabled = enabled;
-            UpdateButtonStates();
-        }
-
-        public void RefreshPreview()
-        {
-            if (_currentRecord != null)
+            if (enabled)
             {
-                UpdatePreviewContent();
+                btnConfirmPrint.Text = LanguageManager.GetString("AutoPrintEnabled");
+                btnConfirmPrint.Enabled = false;
             }
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-            Logger.Info("打印预览窗口已关闭");
-        }
-
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            Logger.Info("打印预览窗口已显示");
-            
-            // 确保窗口在屏幕中央
-            this.CenterToParent();
+            else
+            {
+                btnConfirmPrint.Text = LanguageManager.GetString("ConfirmPrint");
+                btnConfirmPrint.Enabled = true;
+            }
         }
     }
 } 

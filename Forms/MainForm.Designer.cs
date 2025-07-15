@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -35,6 +36,14 @@ namespace ZebraPrinterMonitor.Forms
         private ListBox lstAvailableFields;
         private RichTextBox rtbTemplatePreview;
 
+        // 预印刷标签模式相关控件
+        private CheckBox chkPrePrintedLabel;
+        private Panel pnlPrePrintedDesign;
+        private GroupBox grpFieldPosition;
+        private ComboBox cmbFieldSelect, cmbAlignment;
+        private NumericUpDown numPosX, numPosY, numWidth;
+        private CheckBox chkValueOnly;
+        private Button btnAddField, btnUpdateField, btnRemoveField;
 
 
         private void InitializeComponent()
@@ -60,7 +69,7 @@ namespace ZebraPrinterMonitor.Forms
             this.MinimumSize = new Size(1220, 700);  // 增加最小宽度
             this.Name = "MainForm";
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Text = "太阳能电池测试打印监控系统 v1.1.42";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.44";
             
             // TabControl设置
             this.tabControl1.Controls.Add(this.tabMonitor);
@@ -87,15 +96,15 @@ namespace ZebraPrinterMonitor.Forms
 
         private void InitializeMonitorTab()
         {
-            this.tabMonitor.Text = "数据监控";
+            this.tabMonitor.Text = LanguageManager.GetString("TabDataMonitoring");
             this.tabMonitor.UseVisualStyleBackColor = true;
             
             // 数据库配置组 - 调整大小和位置
-            this.grpDatabaseConfig = new GroupBox { Text = "数据库配置", Location = new Point(10, 10), Size = new Size(1160, 80) };
-            this.lblDatabasePath = new Label { Text = "数据库路径:", Location = new Point(15, 25), AutoSize = true };
-            this.txtDatabasePath = new TextBox { Location = new Point(15, 45), Size = new Size(850, 23) };
-            this.btnBrowseDatabase = new Button { Text = "浏览...", Location = new Point(875, 43), Size = new Size(80, 27) };
-            this.btnTestConnection = new Button { Text = "测试连接", Location = new Point(965, 43), Size = new Size(100, 27) };
+            this.grpDatabaseConfig = new GroupBox { Text = LanguageManager.GetString("DatabaseConfig"), Location = new Point(10, 10), Size = new Size(1160, 80) };
+            this.lblDatabasePath = new Label { Text = LanguageManager.GetString("DatabasePath"), Location = new Point(15, 25), AutoSize = true };
+            this.txtDatabasePath = new TextBox { Location = new Point(15, 46), Size = new Size(850, 25), ReadOnly = true };
+            this.btnBrowseDatabase = new Button { Text = LanguageManager.GetString("Browse"), Location = new Point(875, 43), Size = new Size(80, 27) };
+            this.btnTestConnection = new Button { Text = LanguageManager.GetString("TestConnection"), Location = new Point(965, 43), Size = new Size(100, 27) };
             
             this.btnBrowseDatabase.Click += btnBrowseDatabase_Click;
             this.btnTestConnection.Click += btnTestConnection_Click;
@@ -103,12 +112,12 @@ namespace ZebraPrinterMonitor.Forms
             this.grpDatabaseConfig.Controls.AddRange(new Control[] { lblDatabasePath, txtDatabasePath, btnBrowseDatabase, btnTestConnection });
             
             // 监控控制组 - 调整大小
-            this.grpMonitorControl = new GroupBox { Text = "监控控制", Location = new Point(10, 100), Size = new Size(1160, 65) };
-            this.btnStartMonitoring = new Button { Text = "开始监控", Location = new Point(15, 25), Size = new Size(100, 30) };
-            this.btnStopMonitoring = new Button { Text = "停止监控", Location = new Point(125, 25), Size = new Size(100, 30) };
-            this.btnPrintPreview = new Button { Text = "打印预览", Location = new Point(235, 25), Size = new Size(100, 30), BackColor = SystemColors.Control, ForeColor = SystemColors.ControlText };
-            this.chkAutoPrint = new CheckBox { Text = "自动打印", Location = new Point(350, 30), Checked = true, AutoSize = true };
-            this.chkEnablePrintCount = new CheckBox { Text = "启用打印次数统计", Location = new Point(470, 30), Checked = false, AutoSize = true };
+            this.grpMonitorControl = new GroupBox { Text = LanguageManager.GetString("MonitorControl"), Location = new Point(10, 100), Size = new Size(1160, 65) };
+            this.btnStartMonitoring = new Button { Text = LanguageManager.GetString("StartMonitoring"), Location = new Point(15, 25), Size = new Size(100, 30) };
+            this.btnStopMonitoring = new Button { Text = LanguageManager.GetString("StopMonitoring"), Location = new Point(125, 25), Size = new Size(100, 30) };
+            this.btnPrintPreview = new Button { Text = LanguageManager.GetString("PrintPreview"), Location = new Point(235, 25), Size = new Size(100, 30), BackColor = SystemColors.Control, ForeColor = SystemColors.ControlText };
+            this.chkAutoPrint = new CheckBox { Text = LanguageManager.GetString("AutoPrint"), Location = new Point(350, 30), Checked = true, AutoSize = true };
+            this.chkEnablePrintCount = new CheckBox { Text = LanguageManager.GetString("EnablePrintCount"), Location = new Point(470, 30), Checked = false, AutoSize = true };
             
             this.btnStartMonitoring.Click += btnStartMonitoring_Click;
             this.btnStopMonitoring.Click += btnStopMonitoring_Click;
@@ -118,20 +127,20 @@ namespace ZebraPrinterMonitor.Forms
             this.grpMonitorControl.Controls.AddRange(new Control[] { btnStartMonitoring, btnStopMonitoring, btnPrintPreview, chkAutoPrint, chkEnablePrintCount });
             
             // 状态信息组 - 调整大小和布局
-            this.grpStatus = new GroupBox { Text = "状态信息", Location = new Point(10, 175), Size = new Size(1160, 85) };
-            this.lblMonitoringStatus = new Label { Text = "监控状态: 已停止", Location = new Point(15, 25), ForeColor = Color.Red, Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold), AutoSize = true };
-            this.lblTotalRecords = new Label { Text = "处理记录: 0", Location = new Point(15, 50), AutoSize = true };
-            this.lblTotalPrints = new Label { Text = "打印任务: 0", Location = new Point(200, 50), AutoSize = true };
-            this.lblLastRecord = new Label { Text = "最后记录: N/A", Location = new Point(400, 50), AutoSize = true };
+            this.grpStatus = new GroupBox { Text = LanguageManager.GetString("StatusInfo"), Location = new Point(10, 175), Size = new Size(1160, 85) };
+            this.lblMonitoringStatus = new Label { Text = LanguageManager.GetString("MonitoringStatusStopped"), Location = new Point(15, 25), ForeColor = Color.Red, Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold), AutoSize = true };
+            this.lblTotalRecords = new Label { Text = LanguageManager.GetString("TotalRecords"), Location = new Point(15, 50), AutoSize = true };
+            this.lblTotalPrints = new Label { Text = LanguageManager.GetString("TotalPrints"), Location = new Point(200, 50), AutoSize = true };
+            this.lblLastRecord = new Label { Text = LanguageManager.GetString("LastRecord"), Location = new Point(400, 50), AutoSize = true };
             
             this.grpStatus.Controls.AddRange(new Control[] { lblMonitoringStatus, lblTotalRecords, lblTotalPrints, lblLastRecord });
             
             // 记录列表组 - 大幅扩大尺寸并改进ListView
-            this.grpRecords = new GroupBox { Text = "最近记录", Location = new Point(10, 270), Size = new Size(1160, 480) };
+            this.grpRecords = new GroupBox { Text = LanguageManager.GetString("RecentRecords"), Location = new Point(10, 270), Size = new Size(1160, 480) };
             this.lvRecords = new ListView 
             { 
-                Location = new Point(15, 25), 
-                Size = new Size(1130, 410), 
+                Location = new Point(15, 30), 
+                Size = new Size(1130, 400), 
                 View = View.Details, 
                 FullRowSelect = true, 
                 GridLines = true,
@@ -140,21 +149,21 @@ namespace ZebraPrinterMonitor.Forms
             };
             
             // 重新定义列，添加Vpm和打印次数列
-            this.lvRecords.Columns.Add("序列号", 150);
-            this.lvRecords.Columns.Add("测试时间", 160);
-            this.lvRecords.Columns.Add("Isc (A)", 90);
-            this.lvRecords.Columns.Add("Voc (V)", 90);
-            this.lvRecords.Columns.Add("Vpm (V)", 90);
-            this.lvRecords.Columns.Add("Pm (W)", 90);
-            this.lvRecords.Columns.Add("打印次数", 80);
-            this.lvRecords.Columns.Add("操作", 120);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("SerialNumber"), 150);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("TestDateTime"), 150);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("Current"), 120);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("Voltage"), 120);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("VoltageVpm"), 120);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("Power"), 120);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("PrintCount"), 100);
+            this.lvRecords.Columns.Add(LanguageManager.GetString("Operation"), 250);
             
             // 添加双击事件用于打印
             this.lvRecords.DoubleClick += LvRecords_DoubleClick;
             this.lvRecords.MouseClick += LvRecords_MouseClick;
             
-            this.btnManualPrint = new Button { Text = "打印选中", Location = new Point(15, 445), Size = new Size(100, 30) };
-            this.btnRefresh = new Button { Text = "刷新", Location = new Point(125, 445), Size = new Size(80, 30) };
+            this.btnManualPrint = new Button { Text = LanguageManager.GetString("PrintSelected"), Location = new Point(15, 445), Size = new Size(100, 30) };
+            this.btnRefresh = new Button { Text = LanguageManager.GetString("Refresh"), Location = new Point(125, 445), Size = new Size(80, 30) };
             
             this.btnManualPrint.Click += btnManualPrint_Click;
             this.btnRefresh.Click += btnRefresh_Click;
@@ -166,17 +175,17 @@ namespace ZebraPrinterMonitor.Forms
 
         private void InitializeConfigTab()
         {
-            this.tabConfig.Text = "系统配置";
+            this.tabConfig.Text = LanguageManager.GetString("TabSystemConfig");
             this.tabConfig.UseVisualStyleBackColor = true;
             
             // 打印机配置组 - 调整尺寸
-            this.grpPrinterConfig = new GroupBox { Text = "打印机配置", Location = new Point(10, 10), Size = new Size(1160, 120) };
-            this.lblPrinter = new Label { Text = "选择打印机:", Location = new Point(15, 30), AutoSize = true };
+            this.grpPrinterConfig = new GroupBox { Text = LanguageManager.GetString("PrinterConfig"), Location = new Point(10, 10), Size = new Size(1160, 120) };
+            this.lblPrinter = new Label { Text = LanguageManager.GetString("SelectedPrinter"), Location = new Point(15, 30), AutoSize = true };
             this.cmbPrinter = new ComboBox { Location = new Point(15, 50), Size = new Size(400, 25), DropDownStyle = ComboBoxStyle.DropDownList };
-            this.lblPrintFormat = new Label { Text = "打印格式:", Location = new Point(450, 30), AutoSize = true };
+            this.lblPrintFormat = new Label { Text = LanguageManager.GetString("PrintFormat"), Location = new Point(450, 30), AutoSize = true };
             this.cmbPrintFormat = new ComboBox { Location = new Point(450, 50), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
-            this.btnTestPrint = new Button { Text = "测试打印", Location = new Point(680, 50), Size = new Size(100, 30) };
-            this.lblPrinterStatus = new Label { Text = "打印机状态: 未知", Location = new Point(15, 85), AutoSize = true };
+            this.btnTestPrint = new Button { Text = LanguageManager.GetString("TestPrint"), Location = new Point(680, 50), Size = new Size(100, 30) };
+            this.lblPrinterStatus = new Label { Text = LanguageManager.GetString("PrinterStatus"), Location = new Point(15, 85), AutoSize = true };
             
             this.cmbPrintFormat.Items.AddRange(new string[] { "Text", "ZPL", "Code128", "QRCode" });
             // SelectedIndex 将在 LoadConfiguration 中根据配置设置
@@ -188,19 +197,19 @@ namespace ZebraPrinterMonitor.Forms
             this.grpPrinterConfig.Controls.AddRange(new Control[] { lblPrinter, cmbPrinter, lblPrintFormat, cmbPrintFormat, btnTestPrint, lblPrinterStatus });
             
             // 应用程序配置组 - 调整尺寸
-            this.grpApplicationConfig = new GroupBox { Text = "应用程序配置", Location = new Point(10, 140), Size = new Size(1160, 120) };
-            this.lblPollInterval = new Label { Text = "轮询间隔 (毫秒):", Location = new Point(15, 30), AutoSize = true };
+            this.grpApplicationConfig = new GroupBox { Text = LanguageManager.GetString("ApplicationConfig"), Location = new Point(10, 140), Size = new Size(1160, 120) };
+            this.lblPollInterval = new Label { Text = LanguageManager.GetString("PollInterval"), Location = new Point(15, 30), AutoSize = true };
             this.numPollInterval = new NumericUpDown { Location = new Point(15, 50), Size = new Size(120, 25), Minimum = 500, Maximum = 60000, Value = 1000, Increment = 500 };
-            this.chkAutoStartMonitoring = new CheckBox { Text = "程序启动时自动开始监控", Location = new Point(200, 53), AutoSize = true };
-            this.chkMinimizeToTray = new CheckBox { Text = "最小化到系统托盘", Location = new Point(200, 83), Checked = true, AutoSize = true };
+            this.chkAutoStartMonitoring = new CheckBox { Text = LanguageManager.GetString("AutoStartMonitoring"), Location = new Point(200, 53), AutoSize = true };
+            this.chkMinimizeToTray = new CheckBox { Text = LanguageManager.GetString("MinimizeToTray"), Location = new Point(200, 83), Checked = true, AutoSize = true };
             
             this.numPollInterval.ValueChanged += numPollInterval_ValueChanged;
             
             this.grpApplicationConfig.Controls.AddRange(new Control[] { lblPollInterval, numPollInterval, chkAutoStartMonitoring, chkMinimizeToTray });
             
             // 语言配置组
-            this.grpLanguageConfig = new GroupBox { Text = "语言配置", Location = new Point(10, 270), Size = new Size(1160, 80) };
-            this.lblLanguage = new Label { Text = "界面语言:", Location = new Point(15, 30), AutoSize = true };
+            this.grpLanguageConfig = new GroupBox { Text = LanguageManager.GetString("LanguageConfig"), Location = new Point(10, 270), Size = new Size(1160, 80) };
+            this.lblLanguage = new Label { Text = LanguageManager.GetString("Language"), Location = new Point(15, 30), AutoSize = true };
             this.cmbLanguage = new ComboBox { Location = new Point(15, 50), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             
             this.cmbLanguage.Items.Add("简体中文");
@@ -215,15 +224,15 @@ namespace ZebraPrinterMonitor.Forms
 
         private void InitializeTemplateTab()
         {
-            this.tabTemplate.Text = "打印模板";
+            this.tabTemplate.Text = LanguageManager.GetString("TabPrintTemplate");
             this.tabTemplate.UseVisualStyleBackColor = true;
             
             // 模板列表组
-            this.grpTemplateList = new GroupBox { Text = "模板列表", Location = new Point(10, 10), Size = new Size(280, 400) };
-            this.cmbTemplateList = new ComboBox { Location = new Point(15, 30), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
-            this.btnNewTemplate = new Button { Text = "新建模板", Location = new Point(15, 70), Size = new Size(80, 30) };
-            this.btnDeleteTemplate = new Button { Text = "删除模板", Location = new Point(110, 70), Size = new Size(80, 30) };
-            this.btnVisualDesigner = new Button { Text = "可视化设计器", Location = new Point(15, 110), Size = new Size(180, 30) };
+            this.grpTemplateList = new GroupBox { Text = LanguageManager.GetString("TemplateList"), Location = new Point(10, 10), Size = new Size(280, 400) };
+            this.cmbTemplateList = new ComboBox { Location = new Point(15, 30), Size = new Size(250, 25), DropDownStyle = ComboBoxStyle.DropDownList };
+            this.btnNewTemplate = new Button { Text = LanguageManager.GetString("NewTemplate"), Location = new Point(15, 70), Size = new Size(80, 30) };
+            this.btnDeleteTemplate = new Button { Text = LanguageManager.GetString("DeleteTemplate"), Location = new Point(110, 70), Size = new Size(80, 30) };
+            this.btnVisualDesigner = new Button { Text = LanguageManager.GetString("VisualDesigner"), Location = new Point(15, 110), Size = new Size(180, 30) };
             
             this.cmbTemplateList.SelectedIndexChanged += cmbTemplateList_SelectedIndexChanged;
             this.btnNewTemplate.Click += btnNewTemplate_Click;
@@ -233,107 +242,150 @@ namespace ZebraPrinterMonitor.Forms
             this.grpTemplateList.Controls.AddRange(new Control[] { cmbTemplateList, btnNewTemplate, btnDeleteTemplate, btnVisualDesigner });
             
             // 模板编辑器组 - 增加高度为新控件留出空间
-            this.grpTemplateEditor = new GroupBox { Text = "模板编辑", Location = new Point(300, 10), Size = new Size(580, 520) };
-            this.lblTemplateName = new Label { Text = "模板名称:", Location = new Point(15, 30), AutoSize = true };
-            this.txtTemplateName = new TextBox { Location = new Point(15, 50), Size = new Size(300, 25) };
-            this.lblTemplateFormat = new Label { Text = "打印格式:", Location = new Point(350, 30), AutoSize = true };
-            this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
+            this.grpTemplateEditor = new GroupBox { Text = LanguageManager.GetString("TemplateEditor"), Location = new Point(300, 10), Size = new Size(580, 520) };
+            this.lblTemplateName = new Label { Text = LanguageManager.GetString("TemplateName"), Location = new Point(15, 30), AutoSize = true };
+            this.txtTemplateName = new TextBox { Location = new Point(15, 50), Size = new Size(250, 25) };
+            this.lblTemplateFormat = new Label { Text = LanguageManager.GetString("PrintFormat"), Location = new Point(350, 30), AutoSize = true };
+            this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             
-            // 新增：预印刷标签复选框
-            var chkPrePrintedLabel = new CheckBox { 
-                Text = "预印刷标签模式", 
-                Location = new Point(15, 85), 
-                Size = new Size(150, 20), 
+            // 预印刷标签模式复选框
+            this.chkPrePrintedLabel = new CheckBox { 
+                Text = LanguageManager.GetString("PrePrintedLabelMode"), 
+                Location = new Point(15, 80), 
                 AutoSize = true 
             };
-            chkPrePrintedLabel.CheckedChanged += chkPrePrintedLabel_CheckedChanged;
             
-            this.lblTemplateContent = new Label { Text = "模板内容:", Location = new Point(15, 115), AutoSize = true };
+            this.lblTemplateContent = new Label { Text = LanguageManager.GetString("TemplateContent"), Location = new Point(15, 115), AutoSize = true };
             
             // 减少模板内容编辑框的高度，为新控件留出空间
             this.txtTemplateContent = new TextBox { 
-                Location = new Point(15, 140), 
-                Size = new Size(540, 180), 
+                Location = new Point(15, 135), 
+                Size = new Size(550, 180), 
                 Multiline = true, 
                 ScrollBars = ScrollBars.Both,
                 Font = new Font("Consolas", 9F)
             };
             
-            // 新增：预印刷标签设计面板
-            var pnlPrePrintedDesign = new Panel { 
-                Location = new Point(15, 140), 
-                Size = new Size(540, 180), 
+            // 预印刷标签设计面板
+            this.pnlPrePrintedDesign = new Panel { 
+                Location = new Point(15, 135), 
+                Size = new Size(550, 180), 
                 BorderStyle = BorderStyle.FixedSingle,
                 Visible = false,
-                BackColor = Color.White
+                BackColor = Color.White,
+                Name = "pnlPrePrintedDesign"
             };
             
-            // 新增：字段位置设置面板
-            var grpFieldPosition = new GroupBox { 
-                Text = "字段位置设置", 
-                Location = new Point(15, 330), 
-                Size = new Size(540, 120), 
+            // 字段位置设置组
+            this.grpFieldPosition = new GroupBox { 
+                Text = LanguageManager.GetString("FieldPositionSetting"), 
+                Location = new Point(15, 320), 
+                Size = new Size(550, 75), 
                 Visible = false 
             };
             
-            var lblFieldSelect = new Label { Text = "选择字段:", Location = new Point(15, 25), AutoSize = true };
-            var cmbFieldSelect = new ComboBox { 
+            var lblFieldSelect = new Label { Text = LanguageManager.GetString("SelectField"), Location = new Point(15, 25), AutoSize = true };
+            this.cmbFieldSelect = new ComboBox { 
                 Location = new Point(15, 45), 
                 Size = new Size(120, 25), 
-                DropDownStyle = ComboBoxStyle.DropDownList 
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Name = "cmbFieldSelect"
+            };
+            this.cmbFieldSelect.Items.AddRange(new string[] { "SerialNumber", "TestDateTime", "Current", "Voltage", "VoltageVpm", "Power", "PrintCount" });
+            
+            var lblPosX = new Label { Text = LanguageManager.GetString("PosX"), Location = new Point(150, 25), AutoSize = true };
+            this.numPosX = new NumericUpDown { 
+                Location = new Point(150, 45), 
+                Size = new Size(60, 25), 
+                Maximum = 800,
+                Name = "numPosX"
             };
             
-            var lblPosX = new Label { Text = "X:", Location = new Point(150, 25), AutoSize = true };
-            var numPosX = new NumericUpDown { Location = new Point(150, 45), Size = new Size(60, 25), Maximum = 1000 };
+            var lblPosY = new Label { Text = LanguageManager.GetString("PosY"), Location = new Point(220, 25), AutoSize = true };
+            this.numPosY = new NumericUpDown { 
+                Location = new Point(220, 45), 
+                Size = new Size(60, 25), 
+                Maximum = 600,
+                Name = "numPosY"
+            };
             
-            var lblPosY = new Label { Text = "Y:", Location = new Point(220, 25), AutoSize = true };
-            var numPosY = new NumericUpDown { Location = new Point(220, 45), Size = new Size(60, 25), Maximum = 1000 };
+            var lblWidth = new Label { Text = LanguageManager.GetString("Width"), Location = new Point(290, 25), AutoSize = true };
+            this.numWidth = new NumericUpDown { 
+                Location = new Point(290, 45), 
+                Size = new Size(60, 25), 
+                Minimum = 50, 
+                Maximum = 400, 
+                Value = 100,
+                Name = "numWidth"
+            };
             
-            var lblWidth = new Label { Text = "宽度:", Location = new Point(290, 25), AutoSize = true };
-            var numWidth = new NumericUpDown { Location = new Point(290, 45), Size = new Size(60, 25), Minimum = 50, Maximum = 500, Value = 150 };
-            
-            var lblAlignment = new Label { Text = "对齐:", Location = new Point(360, 25), AutoSize = true };
-            var cmbAlignment = new ComboBox { 
+            var lblAlignment = new Label { Text = LanguageManager.GetString("Alignment"), Location = new Point(360, 25), AutoSize = true };
+            this.cmbAlignment = new ComboBox { 
                 Location = new Point(360, 45), 
                 Size = new Size(80, 25), 
-                DropDownStyle = ComboBoxStyle.DropDownList 
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Name = "cmbAlignment"
             };
-            cmbAlignment.Items.AddRange(new string[] { "Left", "Center", "Right" });
-            cmbAlignment.SelectedIndex = 0;
+            this.cmbAlignment.Items.AddRange(new string[] { "Left", "Center", "Right" });
+            this.cmbAlignment.SelectedIndex = 2; // 默认右对齐
             
-            var chkValueOnly = new CheckBox { 
-                Text = "仅数值", 
+            this.chkValueOnly = new CheckBox { 
+                Text = LanguageManager.GetString("ValueOnly"), 
                 Location = new Point(450, 47), 
-                Size = new Size(80, 20), 
-                AutoSize = true 
+                AutoSize = true,
+                Name = "chkValueOnly"
             };
             
-            var btnAddField = new Button { Text = "添加字段", Location = new Point(15, 80), Size = new Size(80, 30) };
-            var btnUpdateField = new Button { Text = "更新字段", Location = new Point(105, 80), Size = new Size(80, 30) };
-            var btnRemoveField = new Button { Text = "删除字段", Location = new Point(195, 80), Size = new Size(80, 30) };
+            this.btnAddField = new Button { 
+                Text = LanguageManager.GetString("AddField"), 
+                Location = new Point(470, 25), 
+                Size = new Size(70, 25),
+                Name = "btnAddField"
+            };
+            this.btnUpdateField = new Button { 
+                Text = LanguageManager.GetString("UpdateField"), 
+                Location = new Point(470, 45), 
+                Size = new Size(70, 25),
+                Name = "btnUpdateField"
+            };
+            this.btnRemoveField = new Button { 
+                Text = LanguageManager.GetString("DeleteField"), 
+                Location = new Point(470, 65), 
+                Size = new Size(70, 25),
+                Name = "btnRemoveField"
+            };
+            
+            // 绑定事件处理
+            this.btnAddField.Click += btnAddField_Click;
+            this.btnUpdateField.Click += btnUpdateField_Click;
+            this.btnRemoveField.Click += btnRemoveField_Click;
             
             // 填充字段选择下拉框
             var availableFields = PrintTemplateManager.GetAvailableFields();
             foreach (var field in availableFields)
             {
-                cmbFieldSelect.Items.Add(field);
+                this.cmbFieldSelect.Items.Add(field);
             }
-            if (cmbFieldSelect.Items.Count > 0)
-                cmbFieldSelect.SelectedIndex = 0;
+            if (this.cmbFieldSelect.Items.Count > 0)
+                this.cmbFieldSelect.SelectedIndex = 0;
             
-            grpFieldPosition.Controls.AddRange(new Control[] { 
-                lblFieldSelect, cmbFieldSelect, lblPosX, numPosX, lblPosY, numPosY, 
-                lblWidth, numWidth, lblAlignment, cmbAlignment, chkValueOnly,
-                btnAddField, btnUpdateField, btnRemoveField 
+            this.grpFieldPosition.Controls.AddRange(new Control[] { 
+                lblFieldSelect, this.cmbFieldSelect, 
+                lblPosX, this.numPosX, 
+                lblPosY, this.numPosY, 
+                lblWidth, this.numWidth, 
+                lblAlignment, this.cmbAlignment,
+                this.chkValueOnly,
+                this.btnAddField, this.btnUpdateField, this.btnRemoveField 
             });
             
             // 调整按钮位置到更下方
             this.btnSaveTemplate = new Button { 
-                Text = "保存模板", 
+                Text = LanguageManager.GetString("SaveTemplate"), 
                 Location = new Point(15, 460), 
                 Size = new Size(100, 40), 
                 Visible = true,
-                BackColor = Color.FromArgb(0, 120, 215), // 蓝色背景
+                BackColor = Color.FromArgb(0, 123, 255), // 蓝色背景
                 ForeColor = Color.White, // 白色文字
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Microsoft YaHei", 9F, FontStyle.Bold)
@@ -342,10 +394,10 @@ namespace ZebraPrinterMonitor.Forms
             
             // 添加工具提示
             var toolTip = new ToolTip();
-            toolTip.SetToolTip(this.btnSaveTemplate, "保存当前模板 (Ctrl+S)");
+            toolTip.SetToolTip(this.btnSaveTemplate, LanguageManager.GetString("SaveTemplateToolTip"));
             
             this.btnPreviewTemplate = new Button { 
-                Text = "预览模板", 
+                Text = LanguageManager.GetString("PreviewTemplate"), 
                 Location = new Point(125, 460), 
                 Size = new Size(100, 40), 
                 Visible = true,
@@ -357,7 +409,7 @@ namespace ZebraPrinterMonitor.Forms
             this.btnPreviewTemplate.FlatAppearance.BorderSize = 0;
             
             var btnClearTemplate = new Button { 
-                Text = "清空内容", 
+                Text = LanguageManager.GetString("ClearContent"), 
                 Location = new Point(235, 460), 
                 Size = new Size(100, 40), 
                 Visible = true,
@@ -369,7 +421,7 @@ namespace ZebraPrinterMonitor.Forms
             btnClearTemplate.FlatAppearance.BorderSize = 0;
             
             var btnImportTemplate = new Button { 
-                Text = "导入模板", 
+                Text = LanguageManager.GetString("ImportTemplate"), 
                 Location = new Point(345, 460), 
                 Size = new Size(100, 40), 
                 Visible = true,
@@ -382,7 +434,7 @@ namespace ZebraPrinterMonitor.Forms
             
             // 添加分隔线说明
             var lblButtonsInfo = new Label { 
-                Text = "提示：蓝色保存、绿色预览、黄色清空、灰色导入", 
+                Text = LanguageManager.GetString("ButtonsInfo"), 
                 Location = new Point(15, 510), 
                 Size = new Size(400, 20), 
                 ForeColor = Color.Gray, 
@@ -399,21 +451,21 @@ namespace ZebraPrinterMonitor.Forms
             
             // 确保所有控件都被添加到组中
             this.grpTemplateEditor.Controls.AddRange(new Control[] { 
-                lblTemplateName, txtTemplateName, 
-                lblTemplateFormat, cmbTemplateFormat, 
-                chkPrePrintedLabel, lblTemplateContent, txtTemplateContent, 
-                pnlPrePrintedDesign, grpFieldPosition,
-                btnSaveTemplate, btnPreviewTemplate, 
+                this.lblTemplateName, this.txtTemplateName, 
+                this.lblTemplateFormat, this.cmbTemplateFormat, 
+                this.chkPrePrintedLabel, this.lblTemplateContent, this.txtTemplateContent, 
+                this.pnlPrePrintedDesign, this.grpFieldPosition,
+                this.btnSaveTemplate, this.btnPreviewTemplate, 
                 btnClearTemplate, btnImportTemplate,
                 lblButtonsInfo
             });
             
             // 可用字段组 - 调整位置和大小
-            this.grpTemplatePreview = new GroupBox { Text = "可用字段和预览", Location = new Point(890, 10), Size = new Size(300, 520) };
-            this.lblAvailableFields = new Label { Text = "可用字段:", Location = new Point(15, 30), AutoSize = true };
-            this.lstAvailableFields = new ListBox { Location = new Point(15, 50), Size = new Size(270, 150) };
-            var lblPreview = new Label { Text = "预览:", Location = new Point(15, 210), AutoSize = true };
-            this.rtbTemplatePreview = new RichTextBox { Location = new Point(15, 230), Size = new Size(270, 250), ReadOnly = true };
+            this.grpTemplatePreview = new GroupBox { Text = LanguageManager.GetString("TemplatePreview"), Location = new Point(890, 10), Size = new Size(300, 520) };
+            this.lblAvailableFields = new Label { Text = LanguageManager.GetString("AvailableFields"), Location = new Point(15, 30), AutoSize = true };
+            this.lstAvailableFields = new ListBox { Location = new Point(15, 50), Size = new Size(270, 130) };
+            var lblPreview = new Label { Text = LanguageManager.GetString("PreviewLabel"), Location = new Point(15, 210), AutoSize = true };
+            this.rtbTemplatePreview = new RichTextBox { Location = new Point(15, 230), Size = new Size(270, 275), ReadOnly = true, WordWrap = true };
             
             // 填充可用字段
             var fields = PrintTemplateManager.GetAvailableFields();
@@ -424,88 +476,79 @@ namespace ZebraPrinterMonitor.Forms
             
             this.lstAvailableFields.DoubleClick += lstAvailableFields_DoubleClick;
             
-            this.grpTemplatePreview.Controls.AddRange(new Control[] { lblAvailableFields, lstAvailableFields, lblPreview, rtbTemplatePreview });
+            this.grpTemplatePreview.Controls.AddRange(new Control[] { this.lblAvailableFields, this.lstAvailableFields, lblPreview, this.rtbTemplatePreview });
             
-            this.tabTemplate.Controls.AddRange(new Control[] { grpTemplateList, grpTemplateEditor, grpTemplatePreview });
+            this.tabTemplate.Controls.AddRange(new Control[] { this.grpTemplateList, this.grpTemplateEditor, this.grpTemplatePreview });
         }
 
         private void InitializeLogsTab()
         {
-            this.tabLogs.Text = "运行日志";
+            this.tabLogs.Text = LanguageManager.GetString("TabRuntimeLogs");
             this.tabLogs.UseVisualStyleBackColor = true;
             
-            this.txtLog = new TextBox 
-            { 
-                Location = new Point(10, 50), 
-                Size = new Size(1160, 670), 
+            // 日志控件
+            this.txtLog = new TextBox { 
+                Location = new Point(10, 55), 
+                Size = new Size(1165, 690), 
                 Multiline = true, 
-                ScrollBars = ScrollBars.Vertical, 
                 ReadOnly = true, 
-                Font = new Font("Consolas", 9F)
+                WordWrap = true,
+                ScrollBars = ScrollBars.Vertical
             };
             
-            this.btnClearLog = new Button { Text = "清空日志", Location = new Point(10, 15), Size = new Size(100, 30) };
-            this.btnSaveLog = new Button { Text = "保存日志", Location = new Point(120, 15), Size = new Size(100, 30) };
+            this.btnClearLog = new Button { Text = LanguageManager.GetString("ClearLogs"), Location = new Point(10, 15), Size = new Size(100, 30) };
+            this.btnSaveLog = new Button { Text = LanguageManager.GetString("SaveLogs"), Location = new Point(120, 15), Size = new Size(100, 30) };
             
             this.btnClearLog.Click += btnClearLog_Click;
             this.btnSaveLog.Click += btnSaveLog_Click;
             
-            this.tabLogs.Controls.AddRange(new Control[] { txtLog, btnClearLog, btnSaveLog });
+            this.tabLogs.Controls.AddRange(new Control[] { this.txtLog, this.btnClearLog, this.btnSaveLog });
         }
 
         // 事件处理方法声明
         private void btnBrowseDatabase_Click(object? sender, EventArgs e)
         {
-            using var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog())
             {
-                Title = "选择Access数据库文件",
-                Filter = "Access数据库文件 (*.mdb;*.accdb)|*.mdb;*.accdb|所有文件 (*.*)|*.*",
-                RestoreDirectory = true
-            };
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                txtDatabasePath.Text = openFileDialog.FileName;
+                openFileDialog.Filter = LanguageManager.GetString("DatabaseFileFilter");
+                openFileDialog.Title = LanguageManager.GetString("SelectDatabaseDialogTitle");
                 
-                // 更新配置
-                var config = ConfigurationManager.Config;
-                config.Database.DatabasePath = openFileDialog.FileName;
-                ConfigurationManager.SaveConfig();
-                
-                AddLogMessage($"数据库路径已更新: {openFileDialog.FileName}");
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    this.txtDatabasePath.Text = openFileDialog.FileName;
+                    
+                    // 保存到配置
+                    var config = ConfigurationManager.Config;
+                    config.Database.DatabasePath = openFileDialog.FileName;
+                    ConfigurationManager.SaveConfig();
+                }
             }
         }
 
         private void btnTestConnection_Click(object? sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtDatabasePath.Text))
+            if (string.IsNullOrEmpty(this.txtDatabasePath.Text))
             {
-                MessageBox.Show("请先选择数据库文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(LanguageManager.GetString("DatabasePath"), LanguageManager.GetString("Warning"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                var config = ConfigurationManager.Config.Database;
-                var success = _databaseMonitor.Connect(txtDatabasePath.Text, config.TableName, config.MonitorField);
-                
-                if (success)
+                // 测试数据库连接
+                if (File.Exists(this.txtDatabasePath.Text))
                 {
-                    MessageBox.Show("数据库连接测试成功！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    AddLogMessage("数据库连接测试成功");
-                    
-                    // 加载最近记录
-                    LoadRecentRecords();
+                    MessageBox.Show(LanguageManager.GetString("Success"), LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("数据库连接失败，请检查文件路径和格式", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(LanguageManager.GetString("DatabaseConnectionFailed"), LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error($"数据库连接测试失败: {ex.Message}", ex);
-                MessageBox.Show($"数据库连接测试失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("Error")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -513,18 +556,18 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
-                if (string.IsNullOrEmpty(txtDatabasePath.Text))
+                if (string.IsNullOrEmpty(this.txtDatabasePath.Text))
                 {
-                    MessageBox.Show("请先选择数据库文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(LanguageManager.GetString("DatabasePath"), LanguageManager.GetString("Warning"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 var config = ConfigurationManager.Config.Database;
                 
                 // 先连接数据库
-                if (!_databaseMonitor.Connect(txtDatabasePath.Text, config.TableName, config.MonitorField))
+                if (!_databaseMonitor.Connect(this.txtDatabasePath.Text, config.TableName, config.MonitorField))
                 {
-                    MessageBox.Show("数据库连接失败，无法开始监控", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(LanguageManager.GetString("DatabaseConnectionFailed"), LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -532,12 +575,12 @@ namespace ZebraPrinterMonitor.Forms
                 _databaseMonitor.StartMonitoring(config.PollInterval);
                 AddLogMessage("数据监控已启动");
                 
-                MessageBox.Show("数据监控已启动", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(LanguageManager.GetString("MonitoringStarted"), LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 Logger.Error($"启动监控失败: {ex.Message}", ex);
-                MessageBox.Show($"启动监控失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("Error")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -547,31 +590,31 @@ namespace ZebraPrinterMonitor.Forms
             {
                 _databaseMonitor.StopMonitoring();
                 AddLogMessage("数据监控已停止");
-                MessageBox.Show("数据监控已停止", "信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(LanguageManager.GetString("MonitoringStopped"), LanguageManager.GetString("Information"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 Logger.Error($"停止监控失败: {ex.Message}", ex);
-                MessageBox.Show($"停止监控失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("Error")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void btnManualPrint_Click(object? sender, EventArgs e)
         {
-            if (lvRecords.SelectedItems.Count == 0)
+            if (this.lvRecords.SelectedItems.Count == 0)
             {
-                MessageBox.Show("请先选择要打印的记录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(LanguageManager.GetString("SelectDatabase"), LanguageManager.GetString("Warning"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                var selectedItem = lvRecords.SelectedItems[0];
+                var selectedItem = this.lvRecords.SelectedItems[0];
                 var record = selectedItem.Tag as TestRecord;
                 
                 if (record == null)
                 {
-                    MessageBox.Show("无效的记录数据", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(LanguageManager.GetString("InvalidRecordData"), LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -592,7 +635,7 @@ namespace ZebraPrinterMonitor.Forms
                     _databaseMonitor.UpdatePrintCount(record.TR_SerialNum ?? record.TR_ID ?? "");
                     
                     AddLogMessage($"手动打印完成: {record.TR_SerialNum}");
-                    MessageBox.Show("打印任务已发送", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(LanguageManager.GetString("PrintTaskSent"), LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     
                     UpdateStatusDisplay();
                     btnRefresh_Click(null, EventArgs.Empty); // 刷新列表显示最新状态
@@ -600,7 +643,7 @@ namespace ZebraPrinterMonitor.Forms
                 else
                 {
                     AddLogMessage($"手动打印失败: {printResult.ErrorMessage}");
-                    MessageBox.Show($"打印失败:\n{printResult.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"{LanguageManager.GetString("PrintFailed")}:\n{printResult.ErrorMessage}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     
                     // 如果是因为没有打印机导致的失败，显示安装提示
                     if (printResult.ErrorMessage?.Contains("打印机") == true && !_printerService.HasAnyPrinter())
@@ -614,7 +657,7 @@ namespace ZebraPrinterMonitor.Forms
             catch (Exception ex)
             {
                 Logger.Error($"手动打印失败: {ex.Message}", ex);
-                MessageBox.Show($"打印过程中发生错误:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("PrintError")}:\n{ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -625,9 +668,9 @@ namespace ZebraPrinterMonitor.Forms
 
         private void cmbPrinter_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if (cmbPrinter.SelectedItem != null)
+            if (this.cmbPrinter.SelectedItem != null)
             {
-                var printerName = cmbPrinter.SelectedItem.ToString();
+                var printerName = this.cmbPrinter.SelectedItem.ToString();
                 _printerService.UpdatePrinterName(printerName!);
                 
                 // 更新配置
@@ -636,8 +679,8 @@ namespace ZebraPrinterMonitor.Forms
                 ConfigurationManager.SaveConfig();
                 
                 AddLogMessage($"打印机已更改为: {printerName}");
-                lblPrinterStatus.Text = $"当前打印机: {printerName}";
-                lblPrinterStatus.ForeColor = Color.Green;
+                this.lblPrinterStatus.Text = $"{LanguageManager.GetString("CurrentPrinter")}: {printerName}";
+                this.lblPrinterStatus.ForeColor = Color.Green;
             }
         }
 
@@ -652,12 +695,12 @@ namespace ZebraPrinterMonitor.Forms
                 if (result.Success)
                 {
                     AddLogMessage($"测试打印成功: {result.PrinterUsed}");
-                    MessageBox.Show($"测试打印已发送到: {result.PrinterUsed}", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"{LanguageManager.GetString("TestPrintSent")}: {result.PrinterUsed}", LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
                     AddLogMessage($"测试打印失败: {result.ErrorMessage}");
-                    MessageBox.Show($"测试打印失败:\n{result.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"{LanguageManager.GetString("TestPrintFailed")}:\n{result.ErrorMessage}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                     
                     // 如果是因为没有打印机导致的失败，显示安装提示
                     if (result.ErrorMessage?.Contains("打印机") == true && !_printerService.HasAnyPrinter())
@@ -671,51 +714,50 @@ namespace ZebraPrinterMonitor.Forms
             catch (Exception ex)
             {
                 Logger.Error($"测试打印失败: {ex.Message}", ex);
-                MessageBox.Show($"测试打印过程中发生错误:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"{LanguageManager.GetString("TestPrintError")}:\n{ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void numPollInterval_ValueChanged(object? sender, EventArgs e)
         {
-            var newInterval = (int)numPollInterval.Value;
+            var newInterval = (int)this.numPollInterval.Value;
             
             // 更新配置
             var config = ConfigurationManager.Config;
             config.Database.PollInterval = newInterval;
             ConfigurationManager.SaveConfig();
             
-            AddLogMessage($"轮询间隔已更改为: {newInterval}ms");
+            AddLogMessage($"{LanguageManager.GetString("PollIntervalChanged")}: {newInterval}ms");
         }
 
         private void btnClearLog_Click(object? sender, EventArgs e)
         {
-            txtLog.Clear();
+            this.txtLog.Clear();
             AddLogMessage("日志已清空");
         }
 
         private void btnSaveLog_Click(object? sender, EventArgs e)
         {
-            try
+            using (var saveFileDialog = new SaveFileDialog())
             {
-                using var saveFileDialog = new SaveFileDialog
-                {
-                    Title = "保存日志文件",
-                    Filter = "文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
-                    DefaultExt = "txt",
-                    FileName = $"监控日志_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
-                };
-
+                saveFileDialog.Filter = LanguageManager.GetString("LogFileFilter");
+                saveFileDialog.DefaultExt = "txt";
+                saveFileDialog.Title = LanguageManager.GetString("SaveLogDialogTitle");
+                
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    File.WriteAllText(saveFileDialog.FileName, txtLog.Text);
-                    MessageBox.Show("日志保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    AddLogMessage($"日志已保存到: {saveFileDialog.FileName}");
+                    try
+                    {
+                        File.WriteAllText(saveFileDialog.FileName, this.txtLog.Text);
+                        MessageBox.Show(LanguageManager.GetString("Success"), LanguageManager.GetString("Success"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        AddLogMessage($"{LanguageManager.GetString("LogSaved")}: {saveFileDialog.FileName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"保存日志失败: {ex.Message}", ex);
+                        MessageBox.Show($"{LanguageManager.GetString("Error")}: {ex.Message}", LanguageManager.GetString("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"保存日志失败: {ex.Message}", ex);
-                MessageBox.Show($"保存日志失败:\n{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -723,29 +765,29 @@ namespace ZebraPrinterMonitor.Forms
         {
             // 更新配置
             var config = ConfigurationManager.Config;
-            config.Database.EnablePrintCount = chkEnablePrintCount.Checked;
+            config.Database.EnablePrintCount = this.chkEnablePrintCount.Checked;
             ConfigurationManager.SaveConfig();
             
-            var status = chkEnablePrintCount.Checked ? "启用" : "禁用";
-            AddLogMessage($"打印次数统计已{status}");
+            var status = this.chkEnablePrintCount.Checked ? LanguageManager.GetString("Enabled") : LanguageManager.GetString("Disabled");
+            AddLogMessage($"{LanguageManager.GetString("PrintCountStatistic")} {status}");
             
-            if (chkEnablePrintCount.Checked)
+            if (this.chkEnablePrintCount.Checked)
             {
-                MessageBox.Show("打印次数统计已启用。\n新的打印操作将更新数据库中的TR_Print字段。", 
-                    "功能启用", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"{LanguageManager.GetString("PrintCountEnabledMessage")}\n{LanguageManager.GetString("PrintOperationWillUpdate")}", 
+                    LanguageManager.GetString("FunctionEnabled"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                MessageBox.Show("打印次数统计已禁用。\n打印操作将不会更新数据库中的TR_Print字段，保持数据库兼容性。", 
-                    "功能禁用", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"{LanguageManager.GetString("PrintCountDisabledMessage")}\n{LanguageManager.GetString("PrintOperationWillNotUpdate")}", 
+                    LanguageManager.GetString("FunctionDisabled"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
         private void LvRecords_DoubleClick(object? sender, EventArgs e)
         {
-            if (lvRecords.SelectedItems.Count > 0)
+            if (this.lvRecords.SelectedItems.Count > 0)
             {
-                var selectedItem = lvRecords.SelectedItems[0];
+                var selectedItem = this.lvRecords.SelectedItems[0];
                 var record = selectedItem.Tag as TestRecord;
                 if (record != null)
                 {
@@ -756,26 +798,26 @@ namespace ZebraPrinterMonitor.Forms
 
         private void LvRecords_MouseClick(object? sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right && lvRecords.SelectedItems.Count > 0)
+            if (e.Button == MouseButtons.Right && this.lvRecords.SelectedItems.Count > 0)
             {
                 var contextMenu = new ContextMenuStrip();
-                contextMenu.Items.Add("打印此记录", null, (s, args) => {
-                    var selectedItem = lvRecords.SelectedItems[0];
+                contextMenu.Items.Add(LanguageManager.GetString("PrintThisRecord"), null, (s, args) => {
+                    var selectedItem = this.lvRecords.SelectedItems[0];
                     var record = selectedItem.Tag as TestRecord;
                     if (record != null)
                     {
                         PrintSelectedRecord(record);
                     }
                 });
-                contextMenu.Items.Add("查看详细信息", null, (s, args) => {
-                    var selectedItem = lvRecords.SelectedItems[0];
+                contextMenu.Items.Add(LanguageManager.GetString("ViewDetails"), null, (s, args) => {
+                    var selectedItem = this.lvRecords.SelectedItems[0];
                     var record = selectedItem.Tag as TestRecord;
                     if (record != null)
                     {
                         ShowRecordDetails(record);
                     }
                 });
-                contextMenu.Show(lvRecords, e.Location);
+                contextMenu.Show(this.lvRecords, e.Location);
             }
         }
 
@@ -789,20 +831,20 @@ namespace ZebraPrinterMonitor.Forms
                     return; // 用户取消打印
                 }
 
-                var config = ConfigurationManager.Config;
+                var config = ConfigurationManager.Config.Printer;
                 // 使用默认模板或配置的模板
-                var templateName = config.Printer.DefaultTemplate;
-                var printResult = _printerService.PrintRecord(record, config.Printer.PrintFormat, templateName);
+                var templateName = config.DefaultTemplate;
+                var printResult = _printerService.PrintRecord(record, config.PrintFormat, templateName);
                 
                 if (printResult.Success)
                 {
                     _databaseMonitor.UpdatePrintCount(record.TR_SerialNum ?? "");
-                    AddLogMessage($"成功打印记录: {record.TR_SerialNum}");
+                    AddLogMessage($"{LanguageManager.GetString("PrintRecordSuccess")}: {record.TR_SerialNum}");
                     btnRefresh_Click(null, EventArgs.Empty); // 刷新列表
                 }
                 else
                 {
-                    AddLogMessage($"打印失败: {printResult.ErrorMessage}");
+                    AddLogMessage($"{LanguageManager.GetString("PrintRecordFailed")}: {printResult.ErrorMessage}");
                     
                     // 如果是因为没有打印机导致的失败，显示安装提示
                     if (printResult.ErrorMessage?.Contains("打印机") == true && !_printerService.HasAnyPrinter())
@@ -816,7 +858,7 @@ namespace ZebraPrinterMonitor.Forms
             catch (Exception ex)
             {
                 Logger.Error($"打印记录失败: {ex.Message}", ex);
-                AddLogMessage($"打印记录失败: {ex.Message}");
+                AddLogMessage($"{LanguageManager.GetString("PrintRecordFailed")}: {ex.Message}");
             }
         }
 
@@ -844,19 +886,19 @@ namespace ZebraPrinterMonitor.Forms
 
         private void ShowRecordDetails(TestRecord record)
         {
-            var details = $"序列号: {record.TR_SerialNum ?? "N/A"}\n" +
-                         $"测试时间: {record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}\n" +
-                         $"短路电流 (Isc): {record.FormatNumber(record.TR_Isc)} A\n" +
-                         $"开路电压 (Voc): {record.FormatNumber(record.TR_Voc)} V\n" +
-                         $"最大功率点电压 (Vpm): {record.FormatNumber(record.TR_Vpm)} V\n" +
-                         $"最大功率点电流 (Ipm): {record.FormatNumber(record.TR_Ipm)} A\n" +
-                         $"最大功率 (Pm): {record.FormatNumber(record.TR_Pm)} W\n" +
-                         $"效率: {record.FormatNumber(record.TR_CellEfficiency)}%\n" +
-                         $"填充因子 (FF): {record.FormatNumber(record.TR_FF)}\n" +
-                         $"等级: {record.TR_Grade ?? "N/A"}\n" +
-                         $"打印次数: {record.TR_Print ?? 0}";
+            var details = $"{LanguageManager.GetString("SerialNumber")}: {record.TR_SerialNum ?? LanguageManager.GetString("NA")}\n" +
+                         $"{LanguageManager.GetString("TestDateTime")}: {record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? LanguageManager.GetString("NA")}\n" +
+                         $"{LanguageManager.GetString("ShortCircuitCurrent")} ({LanguageManager.GetString("Isc")}): {record.FormatNumber(record.TR_Isc)} {LanguageManager.GetString("A")}\n" +
+                         $"{LanguageManager.GetString("OpenCircuitVoltage")} ({LanguageManager.GetString("Voc")}): {record.FormatNumber(record.TR_Voc)} {LanguageManager.GetString("V")}\n" +
+                         $"{LanguageManager.GetString("MaximumPowerPointVoltage")} ({LanguageManager.GetString("Vpm")}): {record.FormatNumber(record.TR_Vpm)} {LanguageManager.GetString("V")}\n" +
+                         $"{LanguageManager.GetString("MaximumPowerPointCurrent")} ({LanguageManager.GetString("Ipm")}): {record.FormatNumber(record.TR_Ipm)} {LanguageManager.GetString("A")}\n" +
+                         $"{LanguageManager.GetString("MaximumPower")} ({LanguageManager.GetString("Pm")}): {record.FormatNumber(record.TR_Pm)} {LanguageManager.GetString("W")}\n" +
+                         $"{LanguageManager.GetString("Efficiency")}: {record.FormatNumber(record.TR_CellEfficiency)}%\n" +
+                         $"{LanguageManager.GetString("FillFactor")} ({LanguageManager.GetString("FF")}): {record.FormatNumber(record.TR_FF)}\n" +
+                         $"{LanguageManager.GetString("Grade")}: {record.TR_Grade ?? LanguageManager.GetString("NA")}\n" +
+                         $"{LanguageManager.GetString("PrintCount")}: {record.TR_Print ?? 0}";
             
-            MessageBox.Show(details, "记录详细信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(details, LanguageManager.GetString("RecordDetails"), MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 } 
