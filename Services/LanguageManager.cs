@@ -132,7 +132,7 @@ namespace ZebraPrinterMonitor.Services
                     ["DeleteTemplate"] = "删除模板",
                     ["VisualDesigner"] = "可视化设计器",
                     ["PrePrintedLabelMode"] = "预印刷标签模式",
-                    ["FieldPositionSetting"] = "字段位置设置",
+        
                     ["SelectField"] = "选择字段:",
                     ["PosX"] = "X:",
                     ["PosY"] = "Y:",
@@ -315,8 +315,7 @@ namespace ZebraPrinterMonitor.Services
                     ["FieldsListTitle"] = "可用字段列表",
                     ["CustomTextTitle"] = "自定义文本",
                     ["EnterCustomTextHint"] = "请输入自定义文本。",
-                    ["FieldPositionX"] = "X位置:",
-                    ["FieldPositionY"] = "Y位置:",
+                    
                     ["FieldWidth"] = "字段宽度:",
                     ["FieldAlignment"] = "字段对齐:",
                     ["AlignLeft"] = "左对齐",
@@ -407,7 +406,7 @@ namespace ZebraPrinterMonitor.Services
                     ["DeleteTemplate"] = "Delete Template",
                     ["VisualDesigner"] = "Visual Designer",
                     ["PrePrintedLabelMode"] = "Pre-printed Label Mode",
-                    ["FieldPositionSetting"] = "Field Position Setting",
+        
                     ["SelectField"] = "Select Field:",
                     ["PosX"] = "X:",
                     ["PosY"] = "Y:",
@@ -590,8 +589,7 @@ namespace ZebraPrinterMonitor.Services
                     ["FieldsListTitle"] = "Available Fields List",
                     ["CustomTextTitle"] = "Custom Text",
                     ["EnterCustomTextHint"] = "Please enter custom text.",
-                    ["FieldPositionX"] = "X Position:",
-                    ["FieldPositionY"] = "Y Position:",
+                    
                     ["FieldWidth"] = "Field Width:",
                     ["FieldAlignment"] = "Field Alignment:",
                     ["AlignLeft"] = "Align Left",

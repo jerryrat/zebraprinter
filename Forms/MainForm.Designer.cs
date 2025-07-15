@@ -36,14 +36,7 @@ namespace ZebraPrinterMonitor.Forms
         private ListBox lstAvailableFields;
         private RichTextBox rtbTemplatePreview;
 
-        // 预印刷标签模式相关控件
-        private CheckBox chkPrePrintedLabel;
-        private Panel pnlPrePrintedDesign;
-        private GroupBox grpFieldPosition;
-        private ComboBox cmbFieldSelect, cmbAlignment;
-        private NumericUpDown numPosX, numPosY, numWidth;
-        private CheckBox chkValueOnly;
-        private Button btnAddField, btnUpdateField, btnRemoveField;
+        // 预印刷标签模式相关控件已删除
 
 
         private void InitializeComponent()
@@ -248,142 +241,23 @@ namespace ZebraPrinterMonitor.Forms
             this.lblTemplateFormat = new Label { Text = LanguageManager.GetString("PrintFormat"), Location = new Point(350, 30), AutoSize = true };
             this.cmbTemplateFormat = new ComboBox { Location = new Point(350, 50), Size = new Size(200, 25), DropDownStyle = ComboBoxStyle.DropDownList };
             
-            // 预印刷标签模式复选框
-            this.chkPrePrintedLabel = new CheckBox { 
-                Text = LanguageManager.GetString("PrePrintedLabelMode"), 
-                Location = new Point(15, 80), 
-                AutoSize = true 
-            };
-            
-            this.lblTemplateContent = new Label { Text = LanguageManager.GetString("TemplateContent"), Location = new Point(15, 115), AutoSize = true };
+            this.lblTemplateContent = new Label { Text = LanguageManager.GetString("TemplateContent"), Location = new Point(15, 80), AutoSize = true };
             
             // 调整模板内容编辑框的位置和大小
             this.txtTemplateContent = new TextBox { 
-                Location = new Point(15, 135), 
-                Size = new Size(550, 240), 
+                Location = new Point(15, 100), 
+                Size = new Size(550, 280), 
                 Multiline = true, 
                 ScrollBars = ScrollBars.Both,
                 Font = new Font("Consolas", 9F)
             };
+
             
-            // 预印刷标签设计面板 - 与模板内容编辑框位置一致，通过显示/隐藏来切换
-            this.pnlPrePrintedDesign = new Panel { 
-                Location = new Point(15, 135), 
-                Size = new Size(550, 160), 
-                BorderStyle = BorderStyle.FixedSingle,
-                Visible = false,
-                BackColor = Color.White,
-                Name = "pnlPrePrintedDesign"
-            };
-            
-            // 字段位置设置组 - 调整位置到设计面板下方
-            this.grpFieldPosition = new GroupBox { 
-                Text = LanguageManager.GetString("FieldPositionSetting"), 
-                Location = new Point(15, 305), 
-                Size = new Size(550, 90), 
-                Visible = false 
-            };
-            
-            var lblFieldSelect = new Label { Text = LanguageManager.GetString("SelectField"), Location = new Point(15, 25), AutoSize = true };
-            this.cmbFieldSelect = new ComboBox { 
-                Location = new Point(15, 45), 
-                Size = new Size(120, 25), 
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Name = "cmbFieldSelect"
-            };
-            this.cmbFieldSelect.Items.AddRange(new string[] { "SerialNumber", "TestDateTime", "Current", "Voltage", "VoltageVpm", "Power", "PrintCount" });
-            
-            var lblPosX = new Label { Text = LanguageManager.GetString("PosX"), Location = new Point(150, 25), AutoSize = true };
-            this.numPosX = new NumericUpDown { 
-                Location = new Point(150, 45), 
-                Size = new Size(60, 25), 
-                Maximum = 800,
-                Name = "numPosX"
-            };
-            
-            var lblPosY = new Label { Text = LanguageManager.GetString("PosY"), Location = new Point(220, 25), AutoSize = true };
-            this.numPosY = new NumericUpDown { 
-                Location = new Point(220, 45), 
-                Size = new Size(60, 25), 
-                Maximum = 600,
-                Name = "numPosY"
-            };
-            
-            var lblWidth = new Label { Text = LanguageManager.GetString("Width"), Location = new Point(290, 25), AutoSize = true };
-            this.numWidth = new NumericUpDown { 
-                Location = new Point(290, 45), 
-                Size = new Size(60, 25), 
-                Minimum = 50, 
-                Maximum = 400, 
-                Value = 100,
-                Name = "numWidth"
-            };
-            
-            var lblAlignment = new Label { Text = LanguageManager.GetString("Alignment"), Location = new Point(360, 25), AutoSize = true };
-            this.cmbAlignment = new ComboBox { 
-                Location = new Point(360, 45), 
-                Size = new Size(80, 25), 
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Name = "cmbAlignment"
-            };
-            this.cmbAlignment.Items.AddRange(new string[] { "Left", "Center", "Right" });
-            this.cmbAlignment.SelectedIndex = 2; // 默认右对齐
-            
-            this.chkValueOnly = new CheckBox { 
-                Text = LanguageManager.GetString("ValueOnly"), 
-                Location = new Point(450, 47), 
-                AutoSize = true,
-                Name = "chkValueOnly"
-            };
-            
-            this.btnAddField = new Button { 
-                Text = LanguageManager.GetString("AddField"), 
-                Location = new Point(470, 25), 
-                Size = new Size(70, 25),
-                Name = "btnAddField"
-            };
-            this.btnUpdateField = new Button { 
-                Text = LanguageManager.GetString("UpdateField"), 
-                Location = new Point(470, 45), 
-                Size = new Size(70, 25),
-                Name = "btnUpdateField"
-            };
-            this.btnRemoveField = new Button { 
-                Text = LanguageManager.GetString("DeleteField"), 
-                Location = new Point(470, 65), 
-                Size = new Size(70, 25),
-                Name = "btnRemoveField"
-            };
-            
-            // 绑定事件处理
-            this.chkPrePrintedLabel.CheckedChanged += chkPrePrintedLabel_CheckedChanged;
-            this.btnAddField.Click += btnAddField_Click;
-            this.btnUpdateField.Click += btnUpdateField_Click;
-            this.btnRemoveField.Click += btnRemoveField_Click;
-            
-            // 填充字段选择下拉框
-            var availableFields = PrintTemplateManager.GetAvailableFields();
-            foreach (var field in availableFields)
-            {
-                this.cmbFieldSelect.Items.Add(field);
-            }
-            if (this.cmbFieldSelect.Items.Count > 0)
-                this.cmbFieldSelect.SelectedIndex = 0;
-            
-            this.grpFieldPosition.Controls.AddRange(new Control[] { 
-                lblFieldSelect, this.cmbFieldSelect, 
-                lblPosX, this.numPosX, 
-                lblPosY, this.numPosY, 
-                lblWidth, this.numWidth, 
-                lblAlignment, this.cmbAlignment,
-                this.chkValueOnly,
-                this.btnAddField, this.btnUpdateField, this.btnRemoveField 
-            });
-            
-            // 调整按钮位置到更下方 - 考虑新的控件布局
+
+            // 调整按钮位置
             this.btnSaveTemplate = new Button { 
                 Text = LanguageManager.GetString("SaveTemplate"), 
-                Location = new Point(15, 410), 
+                Location = new Point(15, 390), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(0, 123, 255), // 蓝色背景
@@ -399,7 +273,7 @@ namespace ZebraPrinterMonitor.Forms
             
             this.btnPreviewTemplate = new Button { 
                 Text = LanguageManager.GetString("PreviewTemplate"), 
-                Location = new Point(125, 410), 
+                Location = new Point(125, 390), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(40, 167, 69), // 绿色背景
@@ -411,7 +285,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnClearTemplate = new Button { 
                 Text = LanguageManager.GetString("ClearContent"), 
-                Location = new Point(235, 410), 
+                Location = new Point(235, 390), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(255, 193, 7), // 黄色背景
@@ -423,7 +297,7 @@ namespace ZebraPrinterMonitor.Forms
             
             var btnImportTemplate = new Button { 
                 Text = LanguageManager.GetString("ImportTemplate"), 
-                Location = new Point(345, 410), 
+                Location = new Point(345, 390), 
                 Size = new Size(100, 40), 
                 Visible = true,
                 BackColor = Color.FromArgb(108, 117, 125), // 灰色背景
@@ -436,7 +310,7 @@ namespace ZebraPrinterMonitor.Forms
             // 添加分隔线说明
             var lblButtonsInfo = new Label { 
                 Text = LanguageManager.GetString("ButtonsInfo"), 
-                Location = new Point(15, 460), 
+                Location = new Point(15, 440), 
                 Size = new Size(400, 20), 
                 ForeColor = Color.Gray, 
                 Font = new Font("Microsoft YaHei", 8F)
@@ -454,8 +328,7 @@ namespace ZebraPrinterMonitor.Forms
             this.grpTemplateEditor.Controls.AddRange(new Control[] { 
                 this.lblTemplateName, this.txtTemplateName, 
                 this.lblTemplateFormat, this.cmbTemplateFormat, 
-                this.chkPrePrintedLabel, this.lblTemplateContent, this.txtTemplateContent, 
-                this.pnlPrePrintedDesign, this.grpFieldPosition,
+                this.lblTemplateContent, this.txtTemplateContent, 
                 this.btnSaveTemplate, this.btnPreviewTemplate, 
                 btnClearTemplate, btnImportTemplate,
                 lblButtonsInfo

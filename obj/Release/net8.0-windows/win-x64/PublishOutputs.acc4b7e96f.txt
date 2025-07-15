@@ -1,2 +1,0 @@
-E:\CODE\zibraa\output\appsettings.json
-E:\CODE\zibraa\output\ZebraPrinterMonitor.exe

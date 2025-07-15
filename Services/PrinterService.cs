@@ -290,21 +290,22 @@ namespace ZebraPrinterMonitor.Services
             var pageWidth = e.PageBounds.Width - leftMargin * 2;
             var startY = topMargin;
 
-            // 检查是否为预印刷标签格式
-            if (_currentPrintContent.StartsWith("FIELD_POS|"))
-            {
-                ProcessPrePrintedLabelPrint(e, font, brush);
-                return;
-            }
-
             var lines = _currentPrintContent.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
                 var line = lines[i];
                 var y = startY + (i * lineHeight);
                 
-                // 检查是否为需要对齐的行（包含冒号且不是装饰行）
-                if (line.Contains(':') && !line.Trim().StartsWith("_") && !line.Trim().StartsWith("-") && !line.Trim().StartsWith("="))
+                // 检查是否为右对齐标记的行
+                if (line.StartsWith("RIGHT_ALIGN:"))
+                {
+                    var content = line.Substring("RIGHT_ALIGN:".Length);
+                    var textSize = e.Graphics.MeasureString(content, font);
+                    var x = leftMargin + pageWidth - textSize.Width;
+                    e.Graphics.DrawString(content, font, brush, x, y);
+                }
+                // 检查是否为需要左右对齐的行（包含冒号且不是装饰行）
+                else if (line.Contains(':') && !line.Trim().StartsWith("_") && !line.Trim().StartsWith("-") && !line.Trim().StartsWith("="))
                 {
                     DrawAlignedLine(e.Graphics, line, font, brush, leftMargin, y, pageWidth);
                 }
@@ -378,56 +379,7 @@ namespace ZebraPrinterMonitor.Services
 ";
         }
 
-        private void ProcessPrePrintedLabelPrint(PrintPageEventArgs e, Font defaultFont, SolidBrush brush)
-        {
-            var lines = _currentPrintContent.Split('\n');
-            
-            foreach (var line in lines)
-            {
-                if (string.IsNullOrEmpty(line) || !line.StartsWith("FIELD_POS|"))
-                    continue;
-
-                var parts = line.Split('|');
-                if (parts.Length < 7)
-                    continue;
-
-                try
-                {
-                    var x = int.Parse(parts[1]);
-                    var y = int.Parse(parts[2]);
-                    var width = int.Parse(parts[3]);
-                    var alignment = Enum.Parse<TextAlignment>(parts[4]);
-                    var fontSize = int.Parse(parts[5]);
-                    var text = parts[6];
-
-                    var font = new Font("Consolas", fontSize);
-                    var textSize = e.Graphics.MeasureString(text, font);
-
-                    float drawX = x;
-                    switch (alignment)
-                    {
-                        case TextAlignment.Right:
-                            drawX = x + width - textSize.Width;
-                            break;
-                        case TextAlignment.Center:
-                            drawX = x + (width - textSize.Width) / 2;
-                            break;
-                        case TextAlignment.Left:
-                        default:
-                            drawX = x;
-                            break;
-                    }
-
-                    e.Graphics.DrawString(text, font, brush, drawX, y);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"处理预印刷标签字段时出错: {ex.Message}", ex);
-                }
-            }
-
-            e.HasMorePages = false;
-        }
+        // ProcessPrePrintedLabelPrint 方法已删除
 
         private void DrawAlignedLine(Graphics graphics, string line, Font font, Brush brush, float leftMargin, float y, float pageWidth)
         {

@@ -15,28 +15,10 @@ namespace ZebraPrinterMonitor.Services
         public PrintFormat Format { get; set; } = PrintFormat.Text;
         public bool IsDefault { get; set; } = false;
         
-        // 新增：预印刷标签支持
-        public bool IsPrePrintedLabel { get; set; } = false;
-        public List<FieldPosition> FieldPositions { get; set; } = new();
+        // 预印刷标签功能已删除
     }
 
-    public class FieldPosition
-    {
-        public string FieldName { get; set; } = "";
-        public int X { get; set; } = 0;
-        public int Y { get; set; } = 0;
-        public TextAlignment Alignment { get; set; } = TextAlignment.Left;
-        public bool ValueOnly { get; set; } = false; // 是否只打印数值，不打印标签名
-        public int Width { get; set; } = 200; // 字段宽度
-        public string FontSize { get; set; } = "12"; // 字体大小
-    }
-
-    public enum TextAlignment
-    {
-        Left,
-        Center,
-        Right
-    }
+    // FieldPosition 和 TextAlignment 已删除
 
     public static class PrintTemplateManager
     {
@@ -102,12 +84,6 @@ namespace ZebraPrinterMonitor.Services
         {
             var content = template.Content;
             
-            // 如果是预印刷标签，使用特殊处理
-            if (template.IsPrePrintedLabel)
-            {
-                return ProcessPrePrintedLabelTemplate(template, record);
-            }
-            
             // 替换模板变量 - 使用规范化的字段名称
             content = content.Replace("{SerialNumber}", record.TR_SerialNum ?? "N/A");
             content = content.Replace("{TestDateTime}", record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
@@ -134,66 +110,34 @@ namespace ZebraPrinterMonitor.Services
             return content;
         }
 
-        private static string ProcessPrePrintedLabelTemplate(PrintTemplate template, TestRecord record)
-        {
-            // 为预印刷标签生成特殊的打印内容
-            var printItems = new List<string>();
-            
-            foreach (var fieldPos in template.FieldPositions)
-            {
-                var value = GetFieldValue(fieldPos.FieldName, record);
-                var displayText = fieldPos.ValueOnly ? value : $"{GetFieldDisplayName(fieldPos.FieldName)}: {value}";
-                
-                // 格式化位置信息用于打印服务处理
-                var positionInfo = $"FIELD_POS|{fieldPos.X}|{fieldPos.Y}|{fieldPos.Width}|{fieldPos.Alignment}|{fieldPos.FontSize}|{displayText}";
-                printItems.Add(positionInfo);
-            }
-            
-            return string.Join("\n", printItems);
-        }
-
-        private static string GetFieldValue(string fieldName, TestRecord record)
-        {
-            return fieldName switch
-            {
-                "{SerialNumber}" => record.TR_SerialNum ?? "N/A",
-                "{TestDateTime}" => record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A",
-                "{ShortCircuitCurrent}" => record.FormatNumber(record.TR_Isc),
-                "{OpenCircuitVoltage}" => record.FormatNumber(record.TR_Voc),
-                "{MaxPowerVoltage}" => record.FormatNumber(record.TR_Vpm),
-                "{MaxPower}" => record.FormatNumber(record.TR_Pm),
-                "{MaxPowerCurrent}" => record.FormatNumber(record.TR_Ipm),
-                "{PrintCount}" => (record.TR_Print ?? 0).ToString(),
-                "{CurrentTime}" => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                "{CurrentDate}" => DateTime.Now.ToString("yyyy-MM-dd"),
-                // 保持向后兼容性
-                "{Current}" => record.FormatNumber(record.TR_Isc),
-                "{Voltage}" => record.FormatNumber(record.TR_Voc),
-                "{VoltageVpm}" => record.FormatNumber(record.TR_Vpm),
-                "{Power}" => record.FormatNumber(record.TR_Pm),
-                _ => "N/A"
-            };
-        }
-
-        private static string GetFieldDisplayName(string fieldName)
-        {
-            var descriptions = GetFieldDescriptions();
-            return descriptions.TryGetValue(fieldName, out var description) ? description : fieldName;
-        }
+        // 预印刷标签相关方法已删除
 
         private static string ProcessAlignment(string content)
         {
-            // 简化对齐处理，因为现在使用像素级精确对齐
-            // 只需要清理多余的空格和换行符
+            // 新的对齐逻辑：
+            // 1. 如果行只有值（如 {Voltage}V），则标记为右对齐（添加RIGHT_ALIGN标记）
+            // 2. 如果有项目名称和值（如 Open Circuit Voltage(Voc): {Voltage}V），则保持原样用于左右对齐处理
             var lines = content.Split('\n');
             var processedLines = new List<string>();
 
             foreach (var line in lines)
             {
-                // 移除行首行尾的多余空格，但保留基本格式
                 var trimmedLine = line.Trim();
-                if (!string.IsNullOrEmpty(trimmedLine))
+                if (string.IsNullOrEmpty(trimmedLine))
+                    continue;
+
+                // 检查是否只包含值（没有冒号且包含{}变量）
+                bool hasColon = trimmedLine.Contains(':');
+                bool hasVariable = trimmedLine.Contains('{') && trimmedLine.Contains('}');
+                
+                if (!hasColon && hasVariable)
                 {
+                    // 只有值的行，添加右对齐标记
+                    processedLines.Add($"RIGHT_ALIGN:{trimmedLine}");
+                }
+                else
+                {
+                    // 有项目名称的行或其他行，保持原样
                     processedLines.Add(trimmedLine);
                 }
             }
@@ -331,77 +275,6 @@ Module Protection: Class II",
 ^XZ",
                     Format = PrintFormat.ZPL,
                     IsDefault = false
-                },
-                new PrintTemplate
-                {
-                    Name = "预印刷标签模板(右对齐数值)",
-                    Content = "预印刷标签模板 - 仅打印数值",
-                    Format = PrintFormat.Text,
-                    IsDefault = false,
-                    IsPrePrintedLabel = true,
-                    FieldPositions = new List<FieldPosition>
-                    {
-                        new FieldPosition
-                        {
-                            FieldName = "{SerialNumber}",
-                            X = 400,
-                            Y = 50,
-                            Width = 200,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "14"
-                        },
-                        new FieldPosition
-                        {
-                            FieldName = "{MaxPower}",
-                            X = 400,
-                            Y = 100,
-                            Width = 150,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "12"
-                        },
-                        new FieldPosition
-                        {
-                            FieldName = "{OpenCircuitVoltage}",
-                            X = 400,
-                            Y = 150,
-                            Width = 150,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "12"
-                        },
-                        new FieldPosition
-                        {
-                            FieldName = "{ShortCircuitCurrent}",
-                            X = 400,
-                            Y = 200,
-                            Width = 150,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "12"
-                        },
-                        new FieldPosition
-                        {
-                            FieldName = "{MaxPowerVoltage}",
-                            X = 400,
-                            Y = 250,
-                            Width = 150,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "12"
-                        },
-                        new FieldPosition
-                        {
-                            FieldName = "{MaxPowerCurrent}",
-                            X = 400,
-                            Y = 300,
-                            Width = 150,
-                            Alignment = TextAlignment.Right,
-                            ValueOnly = true,
-                            FontSize = "12"
-                        }
-                    }
                 }
             };
         }
