@@ -79,10 +79,23 @@ namespace ZebraPrinterMonitor.Forms
                 Margin = new Padding(5)
             };
 
+            var fieldContainer = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 4,
+                ColumnCount = 1,
+                Margin = new Padding(5)
+            };
+
+            // 设置行高
+            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 70F)); // 字段列表
+            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 文本输入
+            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 添加按钮
+            fieldContainer.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // 清空按钮
+
             _fieldListBox = new ListBox
             {
                 Dock = DockStyle.Fill,
-                Margin = new Padding(5),
                 SelectionMode = SelectionMode.One
             };
 
@@ -93,7 +106,38 @@ namespace ZebraPrinterMonitor.Forms
             }
 
             _fieldListBox.MouseDown += FieldListBox_MouseDown;
-            fieldPanel.Controls.Add(_fieldListBox);
+            fieldContainer.Controls.Add(_fieldListBox, 0, 0);
+
+            // 自定义文本输入框
+            var customTextBox = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                PlaceholderText = "输入自定义文本",
+                Margin = new Padding(2)
+            };
+            fieldContainer.Controls.Add(customTextBox, 0, 1);
+
+            // 添加自定义文本按钮
+            var addCustomButton = new Button
+            {
+                Text = "添加自定义文本",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(2)
+            };
+            addCustomButton.Click += (s, e) => AddCustomText_Click(customTextBox);
+            fieldContainer.Controls.Add(addCustomButton, 0, 2);
+
+            // 清空设计面板按钮
+            var clearDesignButton = new Button
+            {
+                Text = "清空设计面板",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(2)
+            };
+            clearDesignButton.Click += ClearDesign_Click;
+            fieldContainer.Controls.Add(clearDesignButton, 0, 3);
+
+            fieldPanel.Controls.Add(fieldContainer);
             mainPanel.Controls.Add(fieldPanel, 0, 0);
 
             // 设计面板
@@ -264,12 +308,22 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
-        private void CreateFieldControl(string fieldKey, Point location)
+        private void CreateFieldControl(string fieldKey, Point location, bool isCustomText = false)
         {
-            var fieldControl = new FieldControl(fieldKey, _availableFields.ContainsKey(fieldKey) ? _availableFields[fieldKey] : fieldKey)
+            string displayText;
+            if (isCustomText)
+            {
+                displayText = fieldKey; // 自定义文本直接显示
+            }
+            else
+            {
+                displayText = _availableFields.ContainsKey(fieldKey) ? _availableFields[fieldKey] : fieldKey;
+            }
+
+            var fieldControl = new FieldControl(fieldKey, displayText, isCustomText)
             {
                 Location = location,
-                BackColor = Color.LightBlue,
+                BackColor = isCustomText ? Color.LightGreen : Color.LightBlue,
                 BorderStyle = BorderStyle.FixedSingle
             };
 
@@ -277,6 +331,7 @@ namespace ZebraPrinterMonitor.Forms
             fieldControl.MouseMove += FieldControl_MouseMove;
             fieldControl.MouseUp += FieldControl_MouseUp;
             fieldControl.Click += FieldControl_Click;
+            fieldControl.DoubleClick += FieldControl_DoubleClick;
 
             _fieldControls.Add(fieldControl);
             _designPanel.Controls.Add(fieldControl);
@@ -313,9 +368,14 @@ namespace ZebraPrinterMonitor.Forms
         {
             if (_isDragging && _selectedField != null)
             {
+                // 将鼠标位置转换为设计面板的坐标
+                var screenPoint = _selectedField.PointToScreen(e.Location);
+                var panelPoint = _designPanel.PointToClient(screenPoint);
+                
+                // 计算新位置，减去拖拽开始点的偏移
                 var newLocation = new Point(
-                    _selectedField.Location.X + e.X - _dragStartPoint.X,
-                    _selectedField.Location.Y + e.Y - _dragStartPoint.Y
+                    panelPoint.X - _dragStartPoint.X,
+                    panelPoint.Y - _dragStartPoint.Y
                 );
                 
                 // 确保不超出边界
@@ -339,6 +399,26 @@ namespace ZebraPrinterMonitor.Forms
             foreach (var control in _fieldControls)
             {
                 control.BackColor = control == _selectedField ? Color.Yellow : Color.LightBlue;
+            }
+        }
+
+        private void FieldControl_DoubleClick(object sender, EventArgs e)
+        {
+            var field = sender as FieldControl;
+            if (field != null && field.IsCustomText)
+            {
+                // 双击编辑自定义文本
+                var result = Microsoft.VisualBasic.Interaction.InputBox(
+                    "编辑自定义文本:", 
+                    "编辑文本", 
+                    field.FieldKey);
+                
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    field.FieldKey = result.Trim();
+                    field.DisplayName = result.Trim();
+                    field.Controls.OfType<Label>().First().Text = result.Trim();
+                }
             }
         }
 
@@ -438,15 +518,19 @@ namespace ZebraPrinterMonitor.Forms
 
             foreach (var field in sortedFields)
             {
-                // 计算字段在文本中的位置
-                var line = field.Location.Y / 20;
-                var column = field.Location.X / 10;
-                
-                // 简单的文本生成逻辑
-                content += $"{field.DisplayName}: {field.FieldKey}\n";
+                if (field.IsCustomText)
+                {
+                    // 自定义文本直接添加
+                    content += field.FieldKey + "\r\n";
+                }
+                else
+                {
+                    // 预定义字段添加为模板变量
+                    content += $"{field.DisplayName}: {field.FieldKey}\r\n";
+                }
             }
 
-            return content;
+            return content.TrimEnd('\r', '\n');
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
@@ -552,19 +636,51 @@ namespace ZebraPrinterMonitor.Forms
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
+
+        private void AddCustomText_Click(TextBox textBox)
+        {
+            if (!string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                var customText = textBox.Text.Trim();
+                // 在设计面板中心位置添加自定义文本
+                var centerPoint = new Point(
+                    _designPanel.Width / 2 - 60, 
+                    _designPanel.Height / 2 - 12
+                );
+                CreateFieldControl(customText, centerPoint, true);
+                textBox.Clear();
+            }
+            else
+            {
+                MessageBox.Show("请输入自定义文本。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void ClearDesign_Click(object sender, EventArgs e)
+        {
+            foreach (var control in _fieldControls.ToList())
+            {
+                _designPanel.Controls.Remove(control);
+                control.Dispose();
+            }
+            _fieldControls.Clear();
+            _previewTextBox.Clear();
+        }
     }
 
     // 字段控件类
     public class FieldControl : UserControl
     {
-        public string FieldKey { get; private set; }
-        public string DisplayName { get; private set; }
+        public string FieldKey { get; set; }
+        public string DisplayName { get; set; }
+        public bool IsCustomText { get; private set; }
         private Label _label;
 
-        public FieldControl(string fieldKey, string displayName)
+        public FieldControl(string fieldKey, string displayName, bool isCustomText = false)
         {
             FieldKey = fieldKey;
             DisplayName = displayName;
+            IsCustomText = isCustomText;
             
             InitializeComponent();
         }
@@ -573,7 +689,7 @@ namespace ZebraPrinterMonitor.Forms
         {
             this.Size = new Size(120, 25);
             this.BorderStyle = BorderStyle.FixedSingle;
-            this.BackColor = Color.LightBlue;
+            this.BackColor = IsCustomText ? Color.LightGreen : Color.LightBlue;
             this.Cursor = Cursors.SizeAll;
 
             _label = new Label
