@@ -2,12 +2,12 @@
 chcp 65001 > nul
 echo ================================================
 echo 太阳能电池测试打印监控系统 - 单文件构建
-echo 版本: 1.1.48 (C# WinForms版本)
+echo 版本: 1.1.49 (C# WinForms版本)
 echo ================================================
 
 REM 设置变量
 set PROJECT_NAME=ZebraPrinterMonitor
-set VERSION=1.1.48
+set VERSION=1.1.49
 set OUTPUT_DIR=publish-single
 set FINAL_DIR=release
 

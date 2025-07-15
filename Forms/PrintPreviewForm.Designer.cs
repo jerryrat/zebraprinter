@@ -37,7 +37,7 @@ namespace ZebraPrinterMonitor.Forms
             // 
             this.AutoScaleDimensions = new SizeF(6F, 13F);
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(340, 600);
+            this.ClientSize = new Size(340, 550);
             this.Controls.Add(this.lblSerialNumber);
             this.Controls.Add(this.rtbPreviewContent);
             this.Controls.Add(this.btnConfirmPrint);
@@ -54,7 +54,7 @@ namespace ZebraPrinterMonitor.Forms
             // lblSerialNumber
             // 
             this.lblSerialNumber.AutoSize = false;
-            this.lblSerialNumber.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            this.lblSerialNumber.Font = new Font("Microsoft Sans Serif", 24F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.lblSerialNumber.ForeColor = Color.Green;
             this.lblSerialNumber.Location = new Point(20, 15);
             this.lblSerialNumber.Name = "lblSerialNumber";
@@ -66,11 +66,11 @@ namespace ZebraPrinterMonitor.Forms
             // 
             // rtbPreviewContent
             // 
-            this.rtbPreviewContent.Font = new Font("Arial", 10F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            this.rtbPreviewContent.Font = new Font("Arial", 14F, FontStyle.Regular, GraphicsUnit.Point, 134);
             this.rtbPreviewContent.Location = new Point(20, 60);
             this.rtbPreviewContent.Name = "rtbPreviewContent";
             this.rtbPreviewContent.ReadOnly = true;
-            this.rtbPreviewContent.Size = new Size(300, 470);
+            this.rtbPreviewContent.Size = new Size(300, 420);
             this.rtbPreviewContent.TabIndex = 1;
             this.rtbPreviewContent.Text = LanguageManager.GetString("LoadingContent");
             
@@ -82,9 +82,9 @@ namespace ZebraPrinterMonitor.Forms
             this.btnConfirmPrint.FlatStyle = FlatStyle.Flat;
             this.btnConfirmPrint.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.btnConfirmPrint.ForeColor = Color.White;
-            this.btnConfirmPrint.Location = new Point(20, 550);
+            this.btnConfirmPrint.Location = new Point(20, 500);
             this.btnConfirmPrint.Name = "btnConfirmPrint";
-            this.btnConfirmPrint.Size = new Size(90, 30);
+            this.btnConfirmPrint.Size = new Size(110, 35);
             this.btnConfirmPrint.TabIndex = 2;
             this.btnConfirmPrint.Text = LanguageManager.GetString("ConfirmPrint");
             this.btnConfirmPrint.UseVisualStyleBackColor = false;
@@ -98,9 +98,9 @@ namespace ZebraPrinterMonitor.Forms
             this.btnShowMain.FlatStyle = FlatStyle.Flat;
             this.btnShowMain.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.btnShowMain.ForeColor = Color.White;
-            this.btnShowMain.Location = new Point(125, 550);
+            this.btnShowMain.Location = new Point(145, 500);
             this.btnShowMain.Name = "btnShowMain";
-            this.btnShowMain.Size = new Size(90, 30);
+            this.btnShowMain.Size = new Size(90, 35);
             this.btnShowMain.TabIndex = 3;
             this.btnShowMain.Text = LanguageManager.GetString("ShowMainWindow");
             this.btnShowMain.UseVisualStyleBackColor = false;
@@ -114,9 +114,9 @@ namespace ZebraPrinterMonitor.Forms
             this.btnClose.FlatStyle = FlatStyle.Flat;
             this.btnClose.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
             this.btnClose.ForeColor = Color.White;
-            this.btnClose.Location = new Point(230, 550);
+            this.btnClose.Location = new Point(250, 500);
             this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new Size(90, 30);
+            this.btnClose.Size = new Size(70, 35);
             this.btnClose.TabIndex = 4;
             this.btnClose.Text = LanguageManager.GetString("Close");
             this.btnClose.UseVisualStyleBackColor = false;
