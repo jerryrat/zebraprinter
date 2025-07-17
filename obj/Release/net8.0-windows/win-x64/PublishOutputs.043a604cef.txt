@@ -1,0 +1,2 @@
+E:\CODE\zibraa\bin\Release\net8.0-windows\win-x64\publish\appsettings.json
+E:\CODE\zibraa\bin\Release\net8.0-windows\win-x64\publish\ZebraPrinterMonitor.exe

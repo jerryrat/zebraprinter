@@ -1,0 +1,7 @@
+E:\CODE\zibra-repair\Release\AccessDatabaseMonitor.pdb
+E:\CODE\zibra-repair\Release\D3DCompiler_47_cor3.dll
+E:\CODE\zibra-repair\Release\PenImc_cor3.dll
+E:\CODE\zibra-repair\Release\PresentationNative_cor3.dll
+E:\CODE\zibra-repair\Release\vcruntime140_cor3.dll
+E:\CODE\zibra-repair\Release\wpfgfx_cor3.dll
+E:\CODE\zibra-repair\Release\AccessDatabaseMonitor.exe

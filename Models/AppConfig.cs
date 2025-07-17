@@ -12,7 +12,7 @@ namespace ZebraPrinterMonitor.Models
 
     public class AppConfig
     {
-        public string Version { get; set; } = "1.3.9.7";
+        public string Version { get; set; } = "1.3.9.8";
         public DatabaseConfig Database { get; set; } = new();
         public PrinterConfig Printer { get; set; } = new();
         public ApplicationConfig Application { get; set; } = new();
@@ -54,7 +54,7 @@ namespace ZebraPrinterMonitor.Models
             };
 
             // 设置版本号
-            Version = "1.3.9.7";
+            Version = "1.3.9.8";
         }
     }
 

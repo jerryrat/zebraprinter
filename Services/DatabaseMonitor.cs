@@ -257,23 +257,43 @@ namespace ZebraPrinterMonitor.Services
             if (!_isRunning)
             {
                 Logger.Warning("监控未启动，无法执行强制刷新");
+                StatusChanged?.Invoke(this, "⚠️ 监控未启动，无法强制刷新");
                 return;
             }
 
-            Logger.Info("🔄 用户触发强制新记录检查");
+            Logger.Info("🔄 用户触发强制刷新检查");
+            StatusChanged?.Invoke(this, "🔄 用户触发强制刷新...");
             
             Task.Run(() =>
             {
                 try
                 {
-                    lock (_knownRecords)
+                    // 🛠️ 修复：重置重试计数和连接状态
+                    _retryCount = 0;
+                    
+                    // 🛠️ 修复：检查连接健康状况
+                    if (!IsConnectionHealthy())
                     {
-                        CheckForNewRecords(null);
+                        Logger.Warning("🔧 强制刷新时检测到连接问题，尝试重新连接...");
+                        StatusChanged?.Invoke(this, "🔧 强制刷新：重新建立连接...");
+                        
+                        if (!AttemptReconnection())
+                        {
+                            Logger.Error("❌ 强制刷新失败：无法重建连接");
+                            StatusChanged?.Invoke(this, "❌ 强制刷新失败：连接异常");
+                            return;
+                        }
                     }
+                    
+                    // 🛠️ 修复：调用新的监控检查方法
+                    CheckForLastRecordChanges(null);
+                    Logger.Info("✅ 强制刷新完成");
+                    StatusChanged?.Invoke(this, "✅ 强制刷新完成");
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"强制刷新检查失败: {ex.Message}", ex);
+                    Logger.Error($"❌ 强制刷新检查失败: {ex.Message}", ex);
+                    StatusChanged?.Invoke(this, $"❌ 强制刷新失败: {ex.Message}");
                 }
             });
         }
@@ -286,6 +306,9 @@ namespace ZebraPrinterMonitor.Services
             try
             {
                 Logger.Info("🔄 强制刷新数据库连接以获取最新数据");
+                
+                // 🛠️ 修复：重置重试计数
+                _retryCount = 0;
                 
                 // 🔧 增强实现：创建新的数据库连接来确保获取最新数据
                 // Access数据库的特性需要新连接才能看到其他连接的最新更改
@@ -300,6 +323,13 @@ namespace ZebraPrinterMonitor.Services
                     var count = testCommand.ExecuteScalar();
                     
                     Logger.Info($"✅ 数据库连接刷新完成，当前表记录数: {count}");
+                    
+                    // 🛠️ 新增：刷新后立即触发一次监控检查
+                    if (_isRunning)
+                    {
+                        Logger.Info("🔄 连接刷新后立即检查数据更新...");
+                        Task.Run(() => CheckForLastRecordChanges(null));
+                    }
                 }
                 else
                 {
@@ -308,7 +338,14 @@ namespace ZebraPrinterMonitor.Services
             }
             catch (Exception ex)
             {
-                Logger.Error($"强制刷新数据库连接失败: {ex.Message}", ex);
+                Logger.Error($"❌ 强制刷新数据库连接失败: {ex.Message}", ex);
+                
+                // 🛠️ 新增：连接刷新失败时尝试重连
+                if (_isRunning && !string.IsNullOrEmpty(_connectionString))
+                {
+                    Logger.Info("🔧 尝试重新建立连接...");
+                    AttemptReconnection();
+                }
             }
         }
 
@@ -1334,6 +1371,7 @@ namespace ZebraPrinterMonitor.Services
         /// <summary>
         /// 🔧 统一监控系统：基于GetLastRecord的完整数据管理
         /// 检测最后记录变化，同时获取最新50条记录，实现统一数据刷新
+        /// 🛠️ 修复：增强连接健康检查和异常恢复机制
         /// </summary>
         private void CheckForLastRecordChanges(object? state)
         {
@@ -1351,6 +1389,23 @@ namespace ZebraPrinterMonitor.Services
                 }
                 
                 _monitoringCycleCount++;
+
+                // 🛠️ 新增：连接健康检查和重新连接逻辑
+                if (!IsConnectionHealthy())
+                {
+                    Logger.Warning("🔧 检测到连接问题，尝试重新建立连接...");
+                    StatusChanged?.Invoke(this, "🔧 连接异常，正在重新连接...");
+                    
+                    if (!AttemptReconnection())
+                    {
+                        Logger.Error("❌ 连接重建失败，监控暂停本次检查");
+                        StatusChanged?.Invoke(this, "❌ 连接重建失败");
+                        return;
+                    }
+                    
+                    Logger.Info("✅ 连接重建成功，继续监控");
+                    StatusChanged?.Invoke(this, "✅ 连接重建成功");
+                }
 
                 // 🔧 核心：统一监控只使用GetLastRecord
                 var currentLastRecord = GetLastRecord();
@@ -1443,6 +1498,83 @@ namespace ZebraPrinterMonitor.Services
                 Logger.Error($"❌ 统一监控检查失败: {ex.Message}", ex);
                 MonitoringError?.Invoke(this, $"监控检查失败: {ex.Message}");
                 StatusChanged?.Invoke(this, $"❌ 监控异常: {ex.Message}");
+                
+                // 🛠️ 新增：异常后的恢复逻辑
+                _retryCount++;
+                if (_retryCount <= MaxRetries)
+                {
+                    Logger.Warning($"⚠️ 监控异常，第 {_retryCount}/{MaxRetries} 次重试");
+                    StatusChanged?.Invoke(this, $"⚠️ 监控异常重试 {_retryCount}/{MaxRetries}");
+                }
+                else
+                {
+                    Logger.Error($"❌ 监控连续失败超过 {MaxRetries} 次，停止监控");
+                    StatusChanged?.Invoke(this, "❌ 监控失败次数过多，已停止");
+                    StopMonitoring();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 🛠️ 新增：检查数据库连接健康状况
+        /// </summary>
+        private bool IsConnectionHealthy()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_connectionString))
+                {
+                    return false;
+                }
+
+                using var connection = new OleDbConnection(_connectionString);
+                connection.Open();
+                
+                // 执行简单查询测试连接
+                using var command = new OleDbCommand($"SELECT COUNT(*) FROM [{_currentTableName}]", connection);
+                var result = command.ExecuteScalar();
+                
+                return result != null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"⚠️ 连接健康检查失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 🛠️ 新增：尝试重新建立数据库连接
+        /// </summary>
+        private bool AttemptReconnection()
+        {
+            try
+            {
+                // 重置重试计数
+                _retryCount = 0;
+                
+                // 如果有有效的连接字符串，测试连接
+                if (!string.IsNullOrEmpty(_connectionString))
+                {
+                    Logger.Info("🔄 尝试重新建立数据库连接...");
+                    
+                    using var connection = new OleDbConnection(_connectionString);
+                    connection.Open();
+                    
+                    // 验证表仍然存在
+                    using var command = new OleDbCommand($"SELECT COUNT(*) FROM [{_currentTableName}]", connection);
+                    var count = command.ExecuteScalar();
+                    
+                    Logger.Info($"✅ 重新连接成功，表 [{_currentTableName}] 记录数: {count}");
+                    return true;
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"❌ 重新连接失败: {ex.Message}", ex);
+                return false;
             }
         }
 

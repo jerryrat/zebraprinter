@@ -16,7 +16,7 @@ namespace ZebraPrinterMonitor.Services
         static ConfigurationManager()
         {
             _config = new AppConfig();
-                            _config.Version = "1.3.9.7";
+                            _config.Version = "1.3.9.8";
             Initialize();
         }
 
@@ -107,7 +107,7 @@ namespace ZebraPrinterMonitor.Services
                     MinimizeToTray = true,
                     AutoStartMonitoring = false
                 },
-                Version = "1.3.9.7"
+                Version = "1.3.9.8"
             };
         }
 

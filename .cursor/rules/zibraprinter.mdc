@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## 发布到 release 文件夹
+## 每次发布保持图片一致性，特别是系统托盘图标
+## 每次版本更新必须更新所有带版本号的文件
+## 保持现有架构，在架构基础上更新细节
+## 请勿随意新增/删除内容
+
+## 发布命名方式为ZebraPrinterMonitor_版本号.exe
