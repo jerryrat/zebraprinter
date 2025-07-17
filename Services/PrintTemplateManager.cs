@@ -14,6 +14,16 @@ namespace ZebraPrinterMonitor.Services
         public string Content { get; set; } = "";
         public PrintFormat Format { get; set; } = PrintFormat.Text;
         public bool IsDefault { get; set; } = false;
+        public int FontSize { get; set; } = 10; // 默认字体大小为10
+        public string FontName { get; set; } = "Arial"; // 默认字体名称
+        
+        // 页眉页脚设置
+        public string HeaderText { get; set; } = "";
+        public string FooterText { get; set; } = "";
+        public string HeaderImagePath { get; set; } = "";
+        public string FooterImagePath { get; set; } = "";
+        public bool ShowHeader { get; set; } = false;
+        public bool ShowFooter { get; set; } = false;
         
         // 预印刷标签功能已删除
     }
@@ -50,6 +60,14 @@ namespace ZebraPrinterMonitor.Services
                 existingTemplate.Content = template.Content;
                 existingTemplate.Format = template.Format;
                 existingTemplate.IsDefault = template.IsDefault;
+                existingTemplate.FontSize = template.FontSize;
+                existingTemplate.FontName = template.FontName;
+                existingTemplate.HeaderText = template.HeaderText;
+                existingTemplate.FooterText = template.FooterText;
+                existingTemplate.HeaderImagePath = template.HeaderImagePath;
+                existingTemplate.FooterImagePath = template.FooterImagePath;
+                existingTemplate.ShowHeader = template.ShowHeader;
+                existingTemplate.ShowFooter = template.ShowFooter;
             }
             else
             {
@@ -114,47 +132,50 @@ namespace ZebraPrinterMonitor.Services
 
         private static string ProcessAlignment(string content)
         {
-            // 新的对齐逻辑：
+            // 🔧 修复换行符失效问题：更好地保持原始换行符格式
             // 1. 如果行只有值（如 {Voltage}V），则标记为右对齐（添加RIGHT_ALIGN标记）
             // 2. 如果有项目名称和值（如 Open Circuit Voltage(Voc): {Voltage}V），则保持原样用于左右对齐处理
             
-            // 处理不同的换行符格式
+            // 保持原始换行符格式，不要过度处理
             var lines = content.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             var processedLines = new List<string>();
 
             foreach (var line in lines)
             {
-                var trimmedLine = line.Trim();
+                // 🔧 不要使用Trim()，保持原始的空白字符和格式
+                var currentLine = line;
                 
-                // 保留空行
-                if (string.IsNullOrEmpty(trimmedLine))
+                // 保留完全空行（包含空白字符的行）
+                if (string.IsNullOrWhiteSpace(currentLine))
                 {
-                    processedLines.Add("");
+                    processedLines.Add(currentLine); // 保持原样，不改为空字符串
                     continue;
                 }
 
                 // 检查是否只包含值（没有冒号且包含{}变量）
-                bool hasColon = trimmedLine.Contains(':');
-                bool hasVariable = trimmedLine.Contains('{') && trimmedLine.Contains('}');
+                var trimmedForCheck = currentLine.Trim(); // 只用于检查，不影响原始内容
+                bool hasColon = trimmedForCheck.Contains(':');
+                bool hasVariable = trimmedForCheck.Contains('{') && trimmedForCheck.Contains('}');
                 
                 // 跳过装饰行（下划线、等号、破折号开头的行）
-                bool isDecorationLine = trimmedLine.StartsWith("_") || 
-                                      trimmedLine.StartsWith("=") || 
-                                      trimmedLine.StartsWith("-") ||
-                                      trimmedLine.All(c => c == '_' || c == '=' || c == '-' || char.IsWhiteSpace(c));
+                bool isDecorationLine = trimmedForCheck.StartsWith("_") || 
+                                      trimmedForCheck.StartsWith("=") || 
+                                      trimmedForCheck.StartsWith("-") ||
+                                      trimmedForCheck.All(c => c == '_' || c == '=' || c == '-' || char.IsWhiteSpace(c));
                 
                 if (!hasColon && hasVariable && !isDecorationLine)
                 {
-                    // 只有值的行，添加右对齐标记
-                    processedLines.Add($"RIGHT_ALIGN:{trimmedLine}");
+                    // 只有值的行，添加右对齐标记，但保持原始缩进
+                    processedLines.Add($"RIGHT_ALIGN:{currentLine}");
                 }
                 else
                 {
-                    // 有项目名称的行或其他行，保持原样
-                    processedLines.Add(trimmedLine);
+                    // 有项目名称的行或其他行，完全保持原样
+                    processedLines.Add(currentLine);
                 }
             }
 
+            // 🔧 保持原始的换行符格式
             return string.Join("\r\n", processedLines);
         }
 
@@ -242,50 +263,50 @@ namespace ZebraPrinterMonitor.Services
                 new PrintTemplate
                 {
                     Name = "默认文本模板",
-                    Content = @"Module Type: {SerialNumber}
-Maximum Power(Pm): {Power}W
-Open Circuit Voltage(Voc): {Voltage}V
-Short Circuit Current(Isc): {Current}A
-Maximum Power Voltage(Vm): {VoltageVpm}V
-Maximum Power Current(Im): {Current}A
-Weight: -- kg
-Dimensions: ----×----×----
-________________________________________________________________
-Series Fuse Rating: 15A
-Tolerance of Pm: 0~+5W
-Measuring uncertainty of Pm: ±3%
-Tolerance of Voc: ±3%
-Tolerance of Isc: ±3%
-Standard Test Conditions: 1000W/m², 25°C, AM1.5
-Produced in accordance with: IEC 61215:2016 & IEC 61730:2016
-Fire Rating/Module Fire Performance: Class C
-MAX.System Voltage: 1000V
-Module Protection: Class II",
+                    Content = "Module Type: {SerialNumber}\r\n" +
+                             "Maximum Power(Pm): {Power}W\r\n" +
+                             "Open Circuit Voltage(Voc): {Voltage}V\r\n" +
+                             "Short Circuit Current(Isc): {Current}A\r\n" +
+                             "Maximum Power Voltage(Vm): {VoltageVpm}V\r\n" +
+                             "Maximum Power Current(Im): {Current}A\r\n" +
+                             "Weight: -- kg\r\n" +
+                             "Dimensions: ----×----×----\r\n" +
+                             "________________________________________________________________\r\n" +
+                             "Series Fuse Rating: 15A\r\n" +
+                             "Tolerance of Pm: 0~+5W\r\n" +
+                             "Measuring uncertainty of Pm: ±3%\r\n" +
+                             "Tolerance of Voc: ±3%\r\n" +
+                             "Tolerance of Isc: ±3%\r\n" +
+                             "Standard Test Conditions: 1000W/m², 25°C, AM1.5\r\n" +
+                             "Produced in accordance with: IEC 61215:2016 & IEC 61730:2016\r\n" +
+                             "Fire Rating/Module Fire Performance: Class C\r\n" +
+                             "MAX.System Voltage: 1000V\r\n" +
+                             "Module Protection: Class II",
                     Format = PrintFormat.Text,
                     IsDefault = true
                 },
                 new PrintTemplate
                 {
                     Name = "简洁文本模板",
-                    Content = @"序列号: {SerialNumber}
-测试时间: {TestDateTime}
-电流: {Current}A
-电压: {Voltage}V
-功率: {Power}W",
+                    Content = "序列号: {SerialNumber}\r\n" +
+                             "测试时间: {TestDateTime}\r\n" +
+                             "电流: {Current}A\r\n" +
+                             "电压: {Voltage}V\r\n" +
+                             "功率: {Power}W",
                     Format = PrintFormat.Text,
                     IsDefault = false
                 },
                 new PrintTemplate
                 {
                     Name = "ZPL标签模板",
-                    Content = @"^XA
-^FO50,50^A0N,30,30^FD序列号: {SerialNumber}^FS
-^FO50,100^A0N,25,25^FD测试时间: {TestDateTime}^FS
-^FO50,150^A0N,25,25^FD电流: {Current}A^FS
-^FO50,200^A0N,25,25^FD电压: {Voltage}V^FS
-^FO50,250^A0N,25,25^FD功率: {Power}W^FS
-^FO50,300^A0N,20,20^FD打印时间: {CurrentTime}^FS
-^XZ",
+                    Content = "^XA\r\n" +
+                             "^FO50,50^A0N,30,30^FD序列号: {SerialNumber}^FS\r\n" +
+                             "^FO50,100^A0N,25,25^FD测试时间: {TestDateTime}^FS\r\n" +
+                             "^FO50,150^A0N,25,25^FD电流: {Current}A^FS\r\n" +
+                             "^FO50,200^A0N,25,25^FD电压: {Voltage}V^FS\r\n" +
+                             "^FO50,250^A0N,25,25^FD功率: {Power}W^FS\r\n" +
+                             "^FO50,300^A0N,20,20^FD打印时间: {CurrentTime}^FS\r\n" +
+                             "^XZ",
                     Format = PrintFormat.ZPL,
                     IsDefault = false
                 }

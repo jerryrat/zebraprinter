@@ -12,7 +12,7 @@ namespace ZebraPrinterMonitor.Models
 
     public class AppConfig
     {
-        public string Version { get; set; } = "1.1.43";
+        public string Version { get; set; } = "1.3.9.7";
         public DatabaseConfig Database { get; set; } = new();
         public PrinterConfig Printer { get; set; } = new();
         public ApplicationConfig Application { get; set; } = new();
@@ -24,7 +24,7 @@ namespace ZebraPrinterMonitor.Models
             {
                 DatabasePath = "",
                 TableName = "TestRecord",
-                MonitorField = "TR_SerialNum",
+                MonitorField = "TR_ID",  // 使用主键作为默认监控字段
                 PollInterval = 1000,
                 EnablePrintCount = false
             };
@@ -34,7 +34,7 @@ namespace ZebraPrinterMonitor.Models
                 LogLevel = "Info",
                 StartMinimized = false,
                 MinimizeToTray = true,
-                AutoStartMonitoring = false
+                AutoStartMonitoring = true  // 默认启用自动开始监控
             };
 
             Printer = new PrinterConfig
@@ -54,7 +54,7 @@ namespace ZebraPrinterMonitor.Models
             };
 
             // 设置版本号
-            Version = "1.1.44";
+            Version = "1.3.9.7";
         }
     }
 
@@ -62,7 +62,7 @@ namespace ZebraPrinterMonitor.Models
     {
         public string DatabasePath { get; set; } = "";
         public string TableName { get; set; } = "TestRecord";
-        public string MonitorField { get; set; } = "TR_SerialNum";
+        public string MonitorField { get; set; } = "TR_ID";
         public int PollInterval { get; set; } = 1000;
         public bool EnablePrintCount { get; set; } = false;  // 默认不启用打印次数功能
     }
@@ -82,7 +82,7 @@ namespace ZebraPrinterMonitor.Models
         public string LogLevel { get; set; } = "Info";
         public bool StartMinimized { get; set; } = false;
         public bool MinimizeToTray { get; set; } = true;
-        public bool AutoStartMonitoring { get; set; } = false;
+        public bool AutoStartMonitoring { get; set; } = true;
     }
 
     public class UIConfig
@@ -93,41 +93,6 @@ namespace ZebraPrinterMonitor.Models
         public int WindowHeight { get; set; } = 800;
         public bool EnableSystemTray { get; set; } = true; // Added this property
         public bool StartMinimized { get; set; } = false; // Added this property
-    }
-
-    public class TestRecord
-    {
-        public string? TR_ID { get; set; }
-        public string? TR_SerialNum { get; set; }
-        public decimal? TR_Isc { get; set; }
-        public decimal? TR_Voc { get; set; }
-        public decimal? TR_Pm { get; set; }
-        public decimal? TR_Ipm { get; set; }
-        public decimal? TR_Vpm { get; set; }
-        public decimal? TR_CellEfficiency { get; set; }
-        public decimal? TR_FF { get; set; }
-        public string? TR_Grade { get; set; }
-        public decimal? TR_Temp { get; set; }
-        public decimal? TR_Irradiance { get; set; }
-        public decimal? TR_Rs { get; set; }
-        public decimal? TR_Rsh { get; set; }
-        public string? TR_CellArea { get; set; }
-        public string? TR_Operater { get; set; }
-        public DateTime? TR_DateTime { get; set; }
-        public int? TR_Print { get; set; }
-        public string? TR_FontColor { get; set; }
-        public string? TR_BackColor { get; set; }
-
-        public string GetDisplayText()
-        {
-            return $"序列号: {TR_SerialNum ?? "N/A"} - 日期: {TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}";
-        }
-
-        public string FormatNumber(decimal? value)
-        {
-            if (value == null) return "N/A";
-            return value.Value.ToString("F3");
-        }
     }
 
     public class PrintResult

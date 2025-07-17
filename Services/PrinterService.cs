@@ -15,6 +15,9 @@ namespace ZebraPrinterMonitor.Services
     {
         private string _currentPrinterName;
         private PrintDocument _printDocument;
+        private int _currentFontSize = 10; // 默认字体大小
+        private string _currentFontName = "Arial"; // 默认字体名称
+        private PrintTemplate? _currentTemplate; // 当前打印模板
 
         public PrinterService()
         {
@@ -163,6 +166,11 @@ namespace ZebraPrinterMonitor.Services
             }
 
             var content = PrintTemplateManager.ProcessTemplate(template, record);
+            
+            // 设置当前字体大小和名称
+            _currentFontSize = template.FontSize;
+            _currentFontName = template.FontName;
+            _currentTemplate = template; // 保存当前模板以供页眉页脚使用
 
             return template.Format switch
             {
@@ -282,19 +290,47 @@ namespace ZebraPrinterMonitor.Services
                 return;
             }
 
-            var font = new Font("Arial", 10);
+            // 使用自定义字体
+            var font = new Font(_currentFontName, _currentFontSize);
             var brush = new SolidBrush(Color.Black);
             var leftMargin = 50;
             var topMargin = 50;
-            var lineHeight = 18;
+            var bottomMargin = 50;
+            var lineHeight = _currentFontSize + 8; // 动态行高，基于字体大小
             var pageWidth = e.PageBounds.Width - leftMargin * 2;
-            var startY = topMargin;
+            var pageHeight = e.PageBounds.Height - topMargin - bottomMargin;
+            
+            var currentY = (float)topMargin;
+
+            // 绘制页眉
+            if (_currentTemplate?.ShowHeader == true)
+            {
+                currentY = DrawHeader(e.Graphics, font, brush, leftMargin, currentY, pageWidth);
+                currentY += lineHeight; // 页眉与内容之间的间距
+            }
+
+            // 计算内容区域的可用高度
+            var footerHeight = 0;
+            if (_currentTemplate?.ShowFooter == true)
+            {
+                // 预估页脚高度
+                footerHeight = CalculateFooterHeight(e.Graphics, font, pageWidth) + lineHeight;
+            }
+
+            var contentAreaHeight = pageHeight - (currentY - topMargin) - footerHeight;
+            var startY = currentY;
 
             var lines = _currentPrintContent.Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
                 var line = lines[i];
                 var y = startY + (i * lineHeight);
+                
+                // 检查是否超出内容区域
+                if (y + lineHeight > startY + contentAreaHeight)
+                {
+                    break; // 超出可用区域，停止绘制
+                }
                 
                 // 检查是否为右对齐标记的行
                 if (line.StartsWith("RIGHT_ALIGN:"))
@@ -327,7 +363,155 @@ namespace ZebraPrinterMonitor.Services
                 }
             }
 
+            // 绘制页脚
+            if (_currentTemplate?.ShowFooter == true)
+            {
+                var footerY = e.PageBounds.Height - bottomMargin;
+                DrawFooter(e.Graphics, font, brush, leftMargin, footerY, pageWidth);
+            }
+
             e.HasMorePages = false;
+        }
+
+        private float DrawHeader(Graphics graphics, Font font, Brush brush, float leftMargin, float startY, float pageWidth)
+        {
+            var currentY = startY;
+            var lineHeight = _currentFontSize + 8;
+
+            try
+            {
+                // 绘制页眉图片
+                if (!string.IsNullOrEmpty(_currentTemplate?.HeaderImagePath) && File.Exists(_currentTemplate.HeaderImagePath))
+                {
+                    try
+                    {
+                        using var headerImage = Image.FromFile(_currentTemplate.HeaderImagePath);
+                        var imageHeight = 60; // 固定页眉图片高度
+                        var imageWidth = (int)(headerImage.Width * ((float)imageHeight / headerImage.Height));
+                        
+                        // 居中显示图片
+                        var imageX = leftMargin + (pageWidth - imageWidth) / 2;
+                        graphics.DrawImage(headerImage, imageX, currentY, imageWidth, imageHeight);
+                        currentY += imageHeight + lineHeight / 2;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"无法加载页眉图片: {ex.Message}");
+                    }
+                }
+
+                // 绘制页眉文本
+                if (!string.IsNullOrEmpty(_currentTemplate?.HeaderText))
+                {
+                    var headerFont = new Font(_currentFontName, _currentFontSize + 2, FontStyle.Bold); // 页眉字体稍大
+                    var textSize = graphics.MeasureString(_currentTemplate.HeaderText, headerFont);
+                    var textX = leftMargin + (pageWidth - textSize.Width) / 2; // 居中
+                    graphics.DrawString(_currentTemplate.HeaderText, headerFont, brush, textX, currentY);
+                    currentY += textSize.Height + lineHeight / 2;
+                }
+
+                // 绘制分隔线
+                if (!string.IsNullOrEmpty(_currentTemplate?.HeaderText) || !string.IsNullOrEmpty(_currentTemplate?.HeaderImagePath))
+                {
+                    using var pen = new Pen(Color.Gray, 1);
+                    graphics.DrawLine(pen, leftMargin, currentY, leftMargin + pageWidth, currentY);
+                    currentY += lineHeight / 2;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"绘制页眉时出错: {ex.Message}", ex);
+            }
+
+            return currentY;
+        }
+
+        private int CalculateFooterHeight(Graphics graphics, Font font, float pageWidth)
+        {
+            var height = 0;
+            var lineHeight = _currentFontSize + 8;
+
+            try
+            {
+                // 计算页脚图片高度
+                if (!string.IsNullOrEmpty(_currentTemplate?.FooterImagePath) && File.Exists(_currentTemplate.FooterImagePath))
+                {
+                    height += 60 + (lineHeight / 2); // 固定页脚图片高度
+                }
+
+                // 计算页脚文本高度
+                if (!string.IsNullOrEmpty(_currentTemplate?.FooterText))
+                {
+                    var footerFont = new Font(_currentFontName, _currentFontSize);
+                    var textSize = graphics.MeasureString(_currentTemplate.FooterText, footerFont);
+                    height += (int)Math.Ceiling(textSize.Height) + (lineHeight / 2);
+                }
+
+                // 分隔线高度
+                if (height > 0)
+                {
+                    height += (lineHeight / 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"计算页脚高度时出错: {ex.Message}", ex);
+            }
+
+            return height;
+        }
+
+        private void DrawFooter(Graphics graphics, Font font, Brush brush, float leftMargin, float footerY, float pageWidth)
+        {
+            var currentY = footerY;
+            var lineHeight = _currentFontSize + 8;
+
+            try
+            {
+                // 绘制分隔线
+                if (!string.IsNullOrEmpty(_currentTemplate?.FooterText) || !string.IsNullOrEmpty(_currentTemplate?.FooterImagePath))
+                {
+                    using var pen = new Pen(Color.Gray, 1);
+                    currentY -= lineHeight / 2;
+                    graphics.DrawLine(pen, leftMargin, currentY, leftMargin + pageWidth, currentY);
+                    currentY -= lineHeight / 2;
+                }
+
+                // 绘制页脚文本
+                if (!string.IsNullOrEmpty(_currentTemplate?.FooterText))
+                {
+                    var footerFont = new Font(_currentFontName, _currentFontSize);
+                    var textSize = graphics.MeasureString(_currentTemplate.FooterText, footerFont);
+                    var textX = leftMargin + (pageWidth - textSize.Width) / 2; // 居中
+                    currentY -= textSize.Height;
+                    graphics.DrawString(_currentTemplate.FooterText, footerFont, brush, textX, currentY);
+                    currentY -= lineHeight / 2;
+                }
+
+                // 绘制页脚图片
+                if (!string.IsNullOrEmpty(_currentTemplate?.FooterImagePath) && File.Exists(_currentTemplate.FooterImagePath))
+                {
+                    try
+                    {
+                        using var footerImage = Image.FromFile(_currentTemplate.FooterImagePath);
+                        var imageHeight = 60; // 固定页脚图片高度
+                        var imageWidth = (int)(footerImage.Width * ((float)imageHeight / footerImage.Height));
+                        
+                        // 居中显示图片
+                        var imageX = leftMargin + (pageWidth - imageWidth) / 2;
+                        currentY -= imageHeight;
+                        graphics.DrawImage(footerImage, imageX, currentY, imageWidth, imageHeight);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"无法加载页脚图片: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"绘制页脚时出错: {ex.Message}", ex);
+            }
         }
 
         public string GeneratePrintContent(TestRecord record, string templateName = "Default")
@@ -344,14 +528,15 @@ namespace ZebraPrinterMonitor.Services
 
                 var content = template.Content;
                 
-                // 替换模板中的占位符
+                // 替换模板中的占位符（注意：单位已在模板中定义，这里只替换数值）
                 content = content.Replace("{SerialNumber}", record.TR_SerialNum ?? "N/A");
                 content = content.Replace("{TestDateTime}", record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
-                content = content.Replace("{Current}", record.FormatNumber(record.TR_Isc) + " A");
-                content = content.Replace("{Voltage}", record.FormatNumber(record.TR_Voc) + " V");
-                content = content.Replace("{VoltageVpm}", record.FormatNumber(record.TR_Vpm) + " V");
-                content = content.Replace("{Power}", record.FormatNumber(record.TR_Ipm) + " W");
+                content = content.Replace("{Current}", record.FormatNumber(record.TR_Isc));
+                content = content.Replace("{Voltage}", record.FormatNumber(record.TR_Voc));
+                content = content.Replace("{VoltageVpm}", record.FormatNumber(record.TR_Vpm));
+                content = content.Replace("{Power}", record.FormatNumber(record.TR_Pm)); // 修正：应该是Pm而不是Ipm
                 content = content.Replace("{PrintCount}", record.TR_Print.ToString());
+                content = content.Replace("{CurrentTime}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 
                 return content;
             }
@@ -407,15 +592,16 @@ namespace ZebraPrinterMonitor.Services
                     var labelLines = wrappedLabel.Split('\n');
                     
                     // 绘制标签行
+                    var dynamicLineHeight = _currentFontSize + 8;
                     for (int i = 0; i < labelLines.Length; i++)
                     {
-                        graphics.DrawString(labelLines[i], font, brush, leftMargin, y + i * 20);
+                        graphics.DrawString(labelLines[i], font, brush, leftMargin, y + i * dynamicLineHeight);
                     }
                     
                     // 在最后一行绘制冒号和值
                     var lastLineWidth = graphics.MeasureString(labelLines[labelLines.Length - 1], font).Width;
-                    graphics.DrawString(":", font, brush, leftMargin + lastLineWidth, y + (labelLines.Length - 1) * 20);
-                    graphics.DrawString(value, font, brush, leftMargin + pageWidth - valueSize.Width, y + (labelLines.Length - 1) * 20);
+                    graphics.DrawString(":", font, brush, leftMargin + lastLineWidth, y + (labelLines.Length - 1) * dynamicLineHeight);
+                    graphics.DrawString(value, font, brush, leftMargin + pageWidth - valueSize.Width, y + (labelLines.Length - 1) * dynamicLineHeight);
                 }
                 else
                 {
@@ -423,11 +609,12 @@ namespace ZebraPrinterMonitor.Services
                     graphics.DrawString(label + ":", font, brush, leftMargin, y);
                     var wrappedValue = WrapTextToWidth(graphics, value, font, pageWidth * 0.7f);
                     var valueLines = wrappedValue.Split('\n');
+                    var dynamicLineHeight = _currentFontSize + 8;
                     
                     for (int i = 0; i < valueLines.Length; i++)
                     {
                         var valueLineSize = graphics.MeasureString(valueLines[i], font);
-                        graphics.DrawString(valueLines[i], font, brush, leftMargin + pageWidth - valueLineSize.Width, y + (i + 1) * 20);
+                        graphics.DrawString(valueLines[i], font, brush, leftMargin + pageWidth - valueLineSize.Width, y + (i + 1) * dynamicLineHeight);
                     }
                 }
             }
@@ -615,6 +802,45 @@ namespace ZebraPrinterMonitor.Services
             };
 
             return PrintRecord(testRecord, "Text");
+        }
+
+        public static List<string> GetSystemFonts()
+        {
+            var fonts = new List<string>();
+            
+            try
+            {
+                using var installedFonts = new System.Drawing.Text.InstalledFontCollection();
+                foreach (var fontFamily in installedFonts.Families)
+                {
+                    try
+                    {
+                        // 只添加支持常规样式的字体
+                        if (fontFamily.IsStyleAvailable(FontStyle.Regular))
+                        {
+                            fonts.Add(fontFamily.Name);
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略无法访问的字体
+                    }
+                }
+                
+                // 按名称排序
+                fonts.Sort();
+                
+                Logger.Info($"已获取 {fonts.Count} 个系统字体");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"获取系统字体失败: {ex.Message}", ex);
+                
+                // 提供默认字体列表
+                fonts.AddRange(new[] { "Arial", "Times New Roman", "Calibri", "Tahoma", "Verdana", "Microsoft YaHei", "SimSun" });
+            }
+            
+            return fonts;
         }
     }
 } 

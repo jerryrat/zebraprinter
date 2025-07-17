@@ -49,6 +49,10 @@ namespace ZebraPrinterMonitor.Forms
             this.Name = "PrintPreviewForm";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.Text = LanguageManager.GetString("PrintPreviewTitle");
+            // 🔧 设置窗口置顶显示在所有程序窗口最上层
+            this.TopMost = true;                     // 置于所有窗口最顶层
+            this.ShowInTaskbar = true;               // 在任务栏显示，方便用户管理
+            this.ShowIcon = false;
             
             // 
             // lblSerialNumber
@@ -73,6 +77,11 @@ namespace ZebraPrinterMonitor.Forms
             this.rtbPreviewContent.Size = new Size(300, 420);
             this.rtbPreviewContent.TabIndex = 1;
             this.rtbPreviewContent.Text = LanguageManager.GetString("LoadingContent");
+            // 🔧 修复打印预览文字遮挡问题：添加换行和滚动条支持
+            this.rtbPreviewContent.WordWrap = true;                    // 启用自动换行
+            this.rtbPreviewContent.ScrollBars = RichTextBoxScrollBars.Both; // 添加滚动条
+            this.rtbPreviewContent.DetectUrls = false;                 // 禁用URL检测
+            this.rtbPreviewContent.Multiline = true;                   // 确保多行显示
             
             // 
             // btnConfirmPrint

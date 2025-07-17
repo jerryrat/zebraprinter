@@ -23,14 +23,25 @@ namespace ZebraPrinterMonitor.Forms
         private PrintPreviewForm? _printPreviewForm;
         private int _totalRecordsProcessed = 0;
         private int _totalPrintJobs = 0;
-        private DateTime _lastRecordTime = DateTime.Now;
+        
+        // 页眉页脚相关字段
+        private bool _showHeader = false;
+        private bool _showFooter = false;
+        private string _headerText = "";
+        private string _footerText = "";
+        private string _headerImagePath = "";
+        private string _footerImagePath = "";
 
         public MainForm()
         {
             InitializeComponent();
-            InitializeServices();
-            InitializeNotifyIcon();
+            InitializeDatabaseMonitor(); // 🔧 使用统一监控系统初始化
+            InitializePrinterService();
+            SetupNotifyIcon();
             InitializeTimer();
+            
+            // 设置默认状态 - 不开启监控
+            UpdateMonitoringButtonStates(false);
             
             // 窗体事件
             this.Load += OnFormLoad;
@@ -40,6 +51,22 @@ namespace ZebraPrinterMonitor.Forms
             // 控件事件
             chkAutoPrint.CheckedChanged += OnAutoPrintChanged;
             cmbPrintFormat.SelectedIndexChanged += OnPrintFormatChanged;
+        }
+        
+        /// <summary>
+        /// 初始化打印服务
+        /// </summary>
+        private void InitializePrinterService()
+        {
+            try
+            {
+                _printerService = new PrinterService();
+                Logger.Info("✅ 打印服务初始化完成");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"❌ 打印服务初始化失败: {ex.Message}", ex);
+            }
         }
 
         private void SetupNotifyIcon()
@@ -118,7 +145,7 @@ namespace ZebraPrinterMonitor.Forms
                 _notifyIcon = new NotifyIcon
                 {
                     Icon = zebraIcon ?? SystemIcons.Application, // 如果找不到Zebra图标则使用默认图标
-                    Text = "太阳能电池测试打印监控系统 v1.1.43",
+                    Text = "太阳能电池测试打印监控系统 v1.2.2 - 连接诊断增强版",
                     Visible = false
                 };
 
@@ -136,9 +163,9 @@ namespace ZebraPrinterMonitor.Forms
 
                 // 设置托盘菜单
                 var contextMenu = new ContextMenuStrip();
-                contextMenu.Items.Add("显示主界面", null, (s, e) => ShowMainWindow());
+                contextMenu.Items.Add(LanguageManager.GetString("ShowMainWindow"), null, (s, e) => ShowMainWindow());
                 contextMenu.Items.Add("-"); // 分隔线
-                contextMenu.Items.Add("退出程序", null, (s, e) => ExitApplication());
+                contextMenu.Items.Add(LanguageManager.GetString("ExitProgram"), null, (s, e) => ExitApplication());
                 
                 _notifyIcon.ContextMenuStrip = contextMenu;
                 _notifyIcon.DoubleClick += (s, e) => ShowMainWindow();
@@ -182,7 +209,7 @@ namespace ZebraPrinterMonitor.Forms
         private void InitializeUI()
         {
             // 设置窗体属性
-            this.Text = "太阳能电池测试打印监控系统 v1.1.43";
+            this.Text = "太阳能电池测试打印监控系统 v1.3.8 - 排序逻辑和时间显示修复版";
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
@@ -367,11 +394,31 @@ namespace ZebraPrinterMonitor.Forms
             
             lblTotalRecords.Text = $"{LanguageManager.GetString("ProcessedRecords")}: {_totalRecordsProcessed}";
             lblTotalPrints.Text = $"{LanguageManager.GetString("PrintJobs")}: {_totalPrintJobs}";
-            lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: {_lastRecordTime:yyyy-MM-dd HH:mm:ss}";
+            
+            // 显示最后记录的序列号
+            try
+            {
+                var lastRecord = _databaseMonitor.GetLastRecord();
+                if (lastRecord != null)
+                {
+                    lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: {lastRecord.TR_SerialNum ?? "N/A"}";
+                }
+                else
+                {
+                    lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: N/A";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"获取最后记录失败: {ex.Message}", ex);
+                lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: N/A";
+            }
         }
 
         private void OnNewRecordFound(object? sender, TestRecord record)
         {
+            Logger.Info($"🔔 新记录事件触发: TR_ID={record.TR_ID}, SerialNum={record.TR_SerialNum}");
+            
             // 使用Invoke确保在UI线程上执行
             this.Invoke(new Action(() =>
             {
@@ -379,49 +426,86 @@ namespace ZebraPrinterMonitor.Forms
                 {
                     _totalRecordsProcessed++;
                     
-                    // 添加到记录列表
-                    var item = new ListViewItem(record.TR_SerialNum ?? "N/A");
-                    item.SubItems.Add(record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
-                    item.SubItems.Add(record.FormatNumber(record.TR_Isc));
-                    item.SubItems.Add(record.FormatNumber(record.TR_Voc));
-                    item.SubItems.Add(record.FormatNumber(record.TR_Vpm));  // 新增Vpm列
-                    item.SubItems.Add(record.FormatNumber(record.TR_Pm));
-                    item.SubItems.Add((record.TR_Print ?? 0).ToString());    // 新增打印次数列
-                    item.SubItems.Add("双击打印");                            // 新增操作列
-                    item.Tag = record;
+                    AddLogMessage($"🎯 新记录 #{_totalRecordsProcessed}: {record.TR_SerialNum} (ID: {record.TR_ID})");
+                    AddLogMessage("🔄 检测到数据变动，执行完整刷新...");
                     
-                    // 根据打印次数设置颜色
-                    if (record.TR_Print > 0)
+                    // 🔧 新增功能：执行完整的刷新流程（类似 btnRefresh_Click）
+                    try
                     {
-                        item.ForeColor = Color.Gray;  // 已打印的记录显示为灰色
+                        // 1. 触发数据库监控的强制检查（如果需要）
+                        if (_databaseMonitor.IsMonitoring)
+                        {
+                            AddLogMessage("🔍 触发数据库强制检查...");
+                        }
+                        
+                        // 2. 强制刷新数据库连接以获取最新数据
+                        _databaseMonitor.ForceRefreshConnection();
+                        AddLogMessage("🔄 强制刷新数据库连接以获取最新数据");
+                        
+                        // 3. 刷新记录列表（完整加载）
+                        LoadRecentRecords();
+                        AddLogMessage("📋 记录列表已完整刷新");
+                        
+                        // 4. 🔧 新增：确保第一行高亮显示并滚动到可见位置
+                        if (lvRecords.Items.Count > 0)
+                        {
+                            // 清除所有选择和高亮
+                            lvRecords.SelectedItems.Clear();
+                            foreach (ListViewItem item in lvRecords.Items)
+                            {
+                                item.BackColor = Color.White; // 重置背景色
+                            }
+                            
+                            // 选中并高亮第一行
+                            var firstItem = lvRecords.Items[0];
+                            firstItem.Selected = true;
+                            firstItem.Focused = true;
+                            firstItem.BackColor = Color.LightYellow; // 淡黄色高亮显示新记录
+                            firstItem.EnsureVisible(); // 确保滚动到可见位置
+                            
+                            AddLogMessage("🌟 第一行记录已高亮显示并滚动到可见位置");
+                        }
+                        
+                        // 5. 更新状态显示
+                        UpdateStatusDisplay();
+                        AddLogMessage("📊 状态显示已更新");
+                        
+                        AddLogMessage("✅ 完整刷新流程执行完成");
                     }
-                    else
+                    catch (Exception refreshEx)
                     {
-                        item.ForeColor = Color.Black; // 未打印的记录显示为黑色
-                    }
-                    
-                    lvRecords.Items.Insert(0, item);
-                    
-                    // 限制显示的记录数量
-                    while (lvRecords.Items.Count > 100)
-                    {
-                        lvRecords.Items.RemoveAt(lvRecords.Items.Count - 1);
+                        Logger.Error($"完整刷新流程失败: {refreshEx.Message}", refreshEx);
+                        AddLogMessage($"❌ 完整刷新失败: {refreshEx.Message}");
                     }
 
-                    // 自动打印
-                    if (chkAutoPrint.Checked)
+                    // 🔧 修复重复打印问题：由于v1.3.9.0使用统一监控系统，禁用旧系统的自动打印
+                    // 自动打印现在由OnDataUpdated方法统一处理，避免重复打印
+                    /* 
+                    // 自动打印新记录 - 已移至统一监控系统
+                    try
                     {
+                        AddLogMessage($"🖨️ 开始自动打印: {record.TR_SerialNum}");
                         AutoPrintRecord(record);
+                        AddLogMessage($"✅ 自动打印完成: {record.TR_SerialNum}");
                     }
-
-                    UpdateStatusDisplay();
+                    catch (Exception printEx)
+                    {
+                        Logger.Error($"自动打印失败: {printEx.Message}", printEx);
+                        AddLogMessage($"❌ 自动打印失败: {printEx.Message}");
+                    }
+                    */
+                    
+                    AddLogMessage("🖨️ 自动打印由统一监控系统处理，避免重复打印");
                     
                     // 显示通知
-                    ShowNotification($"新记录: {record.TR_SerialNum}", "发现新的测试记录");
+                    ShowNotification($"新记录检测 #{_totalRecordsProcessed}", $"序列号: {record.TR_SerialNum} 已自动处理并高亮显示");
+                    
+                    Logger.Info($"✅ 新记录处理完成，总处理数: {_totalRecordsProcessed}");
                 }
                 catch (Exception ex)
                 {
                     Logger.Error($"处理新记录失败: {ex.Message}", ex);
+                    AddLogMessage($"❌ 处理新记录时出错: {ex.Message}");
                 }
             }));
         }
@@ -430,31 +514,75 @@ namespace ZebraPrinterMonitor.Forms
         {
             try
             {
+                Logger.Info($"🖨️ 开始自动打印记录: {record.TR_SerialNum}");
+                AddLogMessage($"🖨️ 准备打印: {record.TR_SerialNum}");
+                
+                // 更新当前打印信息
+                UpdateCurrentPrintInfo(record, "监控检测到新记录-自动打印");
+
                 var config = ConfigurationManager.Config;
+                
+                // 检查打印机配置
+                if (string.IsNullOrEmpty(config.Printer.PrinterName))
+                {
+                    AddLogMessage("⚠️ 未选择打印机，尝试使用默认打印机");
+                }
+                
                 // 使用默认模板或配置的模板
                 var templateName = config.Printer.DefaultTemplate;
+                AddLogMessage($"📄 使用打印模板: {templateName}");
+                AddLogMessage($"🔧 打印格式: {config.Printer.PrintFormat}");
+                
                 var printResult = _printerService.PrintRecord(record, config.Printer.PrintFormat, templateName);
 
                 if (printResult.Success)
                 {
                     _totalPrintJobs++;
                     
-                    // 更新数据库打印计数
-                    _databaseMonitor.UpdatePrintCount(record.TR_SerialNum ?? record.TR_ID ?? "");
+                    // 更新数据库打印计数（使用TestRecord对象，优先TR_ID匹配）
+                    try
+                    {
+                        _databaseMonitor.UpdatePrintCount(record);
+                        AddLogMessage($"📊 已更新打印计数: {record.TR_SerialNum}");
+                    }
+                    catch (Exception countEx)
+                    {
+                        Logger.Warning($"更新打印计数失败: {countEx.Message}");
+                        AddLogMessage($"⚠️ 更新打印计数失败: {countEx.Message}");
+                    }
                     
-                    Logger.Info($"自动打印完成: {record.TR_SerialNum}");
-                    AddLogMessage($"自动打印: {record.TR_SerialNum} -> {printResult.PrinterUsed}");
+                    Logger.Info($"✅ 自动打印完成: {record.TR_SerialNum}");
+                    AddLogMessage($"✅ 打印成功: {record.TR_SerialNum} -> {printResult.PrinterUsed}");
+                    AddLogMessage($"📈 总打印任务数: {_totalPrintJobs}");
                 }
                 else
                 {
-                    Logger.Error($"自动打印失败: {printResult.ErrorMessage}");
-                    AddLogMessage($"打印失败: {record.TR_SerialNum} - {printResult.ErrorMessage}");
+                    Logger.Error($"❌ 自动打印失败: {printResult.ErrorMessage}");
+                    AddLogMessage($"❌ 打印失败: {record.TR_SerialNum}");
+                    AddLogMessage($"📝 失败原因: {printResult.ErrorMessage}");
+                    
+                    // 如果是因为没有打印机导致的失败，显示详细提示
+                    if (printResult.ErrorMessage?.Contains("打印机") == true)
+                    {
+                        AddLogMessage("💡 提示: 请检查打印机是否正确安装和配置");
+                        if (!_printerService.HasAnyPrinter())
+                        {
+                            AddLogMessage("⚠️ 系统中未检测到可用的打印机");
+                        }
+                    }
                 }
+
+                // 打印完成后清除当前打印信息
+                UpdateCurrentPrintInfo();
             }
             catch (Exception ex)
             {
-                Logger.Error($"自动打印异常: {ex.Message}", ex);
-                AddLogMessage($"打印异常: {record.TR_SerialNum} - {ex.Message}");
+                Logger.Error($"❌ 自动打印异常: {ex.Message}", ex);
+                AddLogMessage($"❌ 打印异常: {record.TR_SerialNum}");
+                AddLogMessage($"📝 异常详情: {ex.Message}");
+                
+                // 出错时也清除当前打印信息
+                UpdateCurrentPrintInfo();
             }
         }
 
@@ -516,6 +644,9 @@ namespace ZebraPrinterMonitor.Forms
             UpdatePrinterList();
             UpdateStatusDisplay();
             
+            // 初始化打印次数列显示状态
+            UpdatePrintCountColumnVisibility();
+            
             // 窗体完全加载后再加载数据
             LoadRecentRecords();
             
@@ -539,6 +670,9 @@ namespace ZebraPrinterMonitor.Forms
             
             // 检查打印机安装状态
             CheckPrinterInstallation();
+            
+            // 检查自动启动监控配置
+            CheckAutoStartMonitoring();
         }
 
         private void CheckPrinterInstallation()
@@ -549,6 +683,155 @@ namespace ZebraPrinterMonitor.Forms
                 var message = _printerService.GetNoPrinterMessage();
                 MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 AddLogMessage(LanguageManager.GetString("NoPrinterFound"));
+            }
+        }
+
+        private void CheckAutoStartMonitoring()
+        {
+            try
+            {
+                var config = ConfigurationManager.Config;
+                
+                // 如果启用了自动开始监控
+                if (config.Application.AutoStartMonitoring)
+                {
+                    // 检查是否配置了数据库路径
+                    if (string.IsNullOrEmpty(config.Database.DatabasePath))
+                    {
+                        AddLogMessage("⚠️ 数据库路径未配置，请在【配置】选项卡中设置数据库路径");
+                        return;
+                    }
+                    
+                    // 检查数据库文件是否存在
+                    if (!System.IO.File.Exists(config.Database.DatabasePath))
+                    {
+                        AddLogMessage($"⚠️ 数据库文件不存在: {config.Database.DatabasePath}");
+                        return;
+                    }
+                    
+                    // 延迟1秒后启动监控，确保UI完全初始化
+                    var autoStartTimer = new System.Windows.Forms.Timer();
+                    autoStartTimer.Interval = 1000; // 1秒延迟
+                    autoStartTimer.Tick += (sender, e) =>
+                    {
+                        autoStartTimer.Stop();
+                        autoStartTimer.Dispose();
+                        StartMonitoringDirectly();
+                    };
+                    autoStartTimer.Start();
+                    
+                    AddLogMessage("🚀 自动启动监控已启用，1秒后开始监控");
+                }
+                else
+                {
+                    AddLogMessage("自动启动监控已禁用");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"检查自动启动监控配置失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 检查自动启动监控配置失败: {ex.Message}");
+            }
+        }
+
+        // 直接启动监控，无弹窗 - 使用异步连接
+        private async void StartMonitoringDirectly()
+        {
+            try
+            {
+                var config = ConfigurationManager.Config.Database;
+                
+                AddLogMessage($"🔗 正在异步连接数据库: {config.DatabasePath}");
+                
+                // 使用异步连接方法（借鉴AccessDatabaseMonitor）
+                if (!await _databaseMonitor.ConnectAsync(config.DatabasePath, config.TableName))
+                {
+                    AddLogMessage("❌ 数据库连接失败");
+                    return;
+                }
+                
+                AddLogMessage("✅ 数据库连接成功");
+                
+                // 获取表字段信息（静默）
+                var columns = _databaseMonitor.GetTableColumns(config.TableName);
+                AddLogMessage($"📊 检测到 {columns.Count} 个字段: {string.Join(", ", columns.Take(10))}{(columns.Count > 10 ? "..." : "")}");
+                
+                // 开始监控
+                _databaseMonitor.StartMonitoring(config.PollInterval);
+                AddLogMessage("🚀 数据库监控已启动");
+                
+                // 更新UI状态
+                UpdateStatusDisplay();
+                UpdateMonitoringButtonStates(true);
+                
+                // 立即加载一次数据
+                LoadRecentRecords();
+                
+                Logger.Info("Direct monitoring started successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"直接启动监控失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 启动监控失败: {ex.Message}");
+            }
+        }
+
+        private string RunMonitoringDiagnostic(DatabaseConfig config)
+        {
+            var diagnostics = new List<string>();
+            
+            try
+            {
+                // 检查数据库路径
+                if (string.IsNullOrEmpty(config.DatabasePath))
+                {
+                    diagnostics.Add("❌ 数据库路径未配置");
+                }
+                else if (!File.Exists(config.DatabasePath))
+                {
+                    diagnostics.Add($"❌ 数据库文件不存在: {config.DatabasePath}");
+                }
+                else
+                {
+                    diagnostics.Add($"✅ 数据库文件存在: {Path.GetFileName(config.DatabasePath)}");
+                }
+                
+                // 检查表名配置
+                if (string.IsNullOrEmpty(config.TableName))
+                {
+                    diagnostics.Add("❌ 表名未配置");
+                }
+                else
+                {
+                    diagnostics.Add($"✅ 监控表: {config.TableName}");
+                }
+                
+                // 检查监控字段配置
+                if (string.IsNullOrEmpty(config.MonitorField))
+                {
+                    diagnostics.Add("❌ 监控字段未配置");
+                }
+                else
+                {
+                    diagnostics.Add($"✅ 监控字段: {config.MonitorField}");
+                }
+                
+                // 检查轮询间隔
+                if (config.PollInterval < 100)
+                {
+                    diagnostics.Add($"⚠️  轮询间隔过短: {config.PollInterval}ms (建议 >= 1000ms)");
+                }
+                else
+                {
+                    diagnostics.Add($"✅ 轮询间隔: {config.PollInterval}ms");
+                }
+                
+                return string.Join(" | ", diagnostics);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"监控诊断失败: {ex.Message}", ex);
+                return $"诊断失败: {ex.Message}";
             }
         }
 
@@ -591,7 +874,11 @@ namespace ZebraPrinterMonitor.Forms
             }
         }
 
-        private void LoadRecentRecords()
+        /// <summary>
+        /// 🔧 统一监控系统：简化的记录加载方法
+        /// 不再直接查询数据库，依赖统一监控系统的数据更新
+        /// </summary>
+        private async void LoadRecentRecords()
         {
             try
             {
@@ -611,31 +898,84 @@ namespace ZebraPrinterMonitor.Forms
                     return;
                 }
 
-                // 尝试连接数据库并获取数据
-                if (!_databaseMonitor.Connect(config.DatabasePath, config.TableName, config.MonitorField))
+                // 🔧 统一监控系统：不再直接查询数据库
+                // 如果监控正在运行，等待统一监控系统的数据更新
+                if (_databaseMonitor.IsMonitoring)
                 {
-                    AddLogMessage("数据库连接失败，无法加载数据");
+                    AddLogMessage("📋 统一监控运行中，等待下次数据更新...");
+                    Logger.Info("LoadRecentRecords: 统一监控运行中，依赖DataUpdated事件");
+                    return;
+                }
+                
+                // 🔧 仅在监控未启动时，手动获取初始数据
+                AddLogMessage("📋 监控未启动，手动获取初始数据...");
+                Logger.Info("LoadRecentRecords: 监控未启动，手动获取初始50条记录");
+                
+                var records = _databaseMonitor.GetRecentRecords(50);
+                UpdateRecordsList(records);
+                
+                AddLogMessage($"📊 手动加载完成，共 {records.Count} 条记录");
+                
+                // 更新状态显示
+                UpdateStatusDisplay();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"❌ 加载记录失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 加载记录失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 强制刷新最近记录 - 解决数据库同步问题（异步版本）
+        /// </summary>
+        private async Task ForceRefreshRecentRecords()
+        {
+            try
+            {
+                var config = ConfigurationManager.Config.Database;
+                
+                // 如果数据库路径为空，则不加载数据
+                if (string.IsNullOrEmpty(config.DatabasePath))
+                {
+                    AddLogMessage("数据库路径未设置，跳过数据加载");
                     return;
                 }
 
+                // 如果数据库文件不存在，则不加载数据
+                if (!System.IO.File.Exists(config.DatabasePath))
+                {
+                    AddLogMessage($"数据库文件不存在: {config.DatabasePath}");
+                    return;
+                }
+
+                // 🔧 修复：不要重启监控，只刷新数据显示
+                // 原来的代码会重启监控，导致已知记录基线被重置，破坏监控连续性
+                
+                // 直接获取最新记录用于显示刷新
                 var records = _databaseMonitor.GetRecentRecords(50);
+                
+                AddLogMessage($"🔍 强制刷新获取到 {records.Count} 条记录");
                 
                 lvRecords.Items.Clear();
                 
                 foreach (var record in records)
                 {
-                    var item = new ListViewItem(record.TR_SerialNum ?? "N/A");
-                    item.SubItems.Add(record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");
-                    item.SubItems.Add(record.FormatNumber(record.TR_Isc));
-                    item.SubItems.Add(record.FormatNumber(record.TR_Voc));
-                    item.SubItems.Add(record.FormatNumber(record.TR_Vpm));  // 新增Vpm列
-                    item.SubItems.Add(record.FormatNumber(record.TR_Pm));
-                    item.SubItems.Add((record.TR_Print ?? 0).ToString());    // 新增打印次数列
-                    item.SubItems.Add("双击打印");                            // 新增操作列
+                    var item = new ListViewItem(record.TR_SerialNum ?? "N/A");                          // 序列号
+                    item.SubItems.Add(record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");   // 测试时间
+                    item.SubItems.Add(record.FormatNumber(record.TR_Isc));                              // ISC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Voc));                              // VOC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Pm));                               // Pm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Ipm));                              // Ipm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Vpm));                              // Vpm
+                    item.SubItems.Add((record.TR_Print ?? 0).ToString());                               // 打印次数
+                    item.SubItems.Add("双击打印");                                                       // 操作
+                    item.SubItems.Add(record.TR_ID ?? "N/A");                                           // 记录ID
                     item.Tag = record;
                     
-                    // 根据打印次数设置颜色
-                    if (record.TR_Print > 0)
+                    // 根据打印次数设置颜色（仅在启用打印次数统计时）
+                    var printConfig = ConfigurationManager.Config;
+                    if (printConfig.Database.EnablePrintCount && record.TR_Print > 0)
                     {
                         item.ForeColor = Color.Gray;  // 已打印的记录显示为灰色
                     }
@@ -647,13 +987,84 @@ namespace ZebraPrinterMonitor.Forms
                     lvRecords.Items.Add(item);
                 }
                 
-                AddLogMessage($"已加载 {records.Count} 条最近记录（按测试日期倒序）");
-                Logger.Info($"已加载 {records.Count} 条最近记录");
+                AddLogMessage($"✅ 强制刷新完成：已加载 {records.Count} 条最近记录");
+                Logger.Info($"强制刷新完成：已加载 {records.Count} 条最近记录");
             }
             catch (Exception ex)
             {
-                Logger.Error($"加载最近记录失败: {ex.Message}", ex);
-                AddLogMessage($"加载最近记录失败: {ex.Message}");
+                Logger.Error($"强制刷新最近记录失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 强制刷新失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 强制刷新最近记录 - 同步版本，用于UI线程调用
+        /// </summary>
+        private void SyncForceRefreshRecentRecords()
+        {
+            try
+            {
+                var config = ConfigurationManager.Config.Database;
+                
+                // 如果数据库路径为空，则不加载数据
+                if (string.IsNullOrEmpty(config.DatabasePath))
+                {
+                    AddLogMessage("数据库路径未设置，跳过数据加载");
+                    return;
+                }
+
+                // 如果数据库文件不存在，则不加载数据
+                if (!System.IO.File.Exists(config.DatabasePath))
+                {
+                    AddLogMessage($"数据库文件不存在: {config.DatabasePath}");
+                    return;
+                }
+
+                // 🔧 修复：不要重启监控，只刷新数据显示
+                // 原来的代码会重启监控，导致已知记录基线被重置，破坏监控连续性
+                
+                // 直接获取最新记录用于显示刷新
+                var records = _databaseMonitor.GetRecentRecords(50);
+                
+                AddLogMessage($"🔍 强制刷新获取到 {records.Count} 条记录");
+                
+                lvRecords.Items.Clear();
+                
+                foreach (var record in records)
+                {
+                    var item = new ListViewItem(record.TR_SerialNum ?? "N/A");                          // 序列号
+                    item.SubItems.Add(record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");   // 测试时间
+                    item.SubItems.Add(record.FormatNumber(record.TR_Isc));                              // ISC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Voc));                              // VOC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Pm));                               // Pm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Ipm));                              // Ipm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Vpm));                              // Vpm
+                    item.SubItems.Add((record.TR_Print ?? 0).ToString());                               // 打印次数
+                    item.SubItems.Add("双击打印");                                                       // 操作
+                    item.SubItems.Add(record.TR_ID ?? "N/A");                                           // 记录ID
+                    item.Tag = record;
+                    
+                    // 根据打印次数设置颜色（仅在启用打印次数统计时）
+                    var printConfig = ConfigurationManager.Config;
+                    if (printConfig.Database.EnablePrintCount && record.TR_Print > 0)
+                    {
+                        item.ForeColor = Color.Gray;  // 已打印的记录显示为灰色
+                    }
+                    else
+                    {
+                        item.ForeColor = Color.Black; // 未打印的记录显示为黑色
+                    }
+                    
+                    lvRecords.Items.Add(item);
+                }
+                
+                AddLogMessage($"✅ 强制刷新完成：已加载 {records.Count} 条最近记录");
+                Logger.Info($"强制刷新完成：已加载 {records.Count} 条最近记录");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"强制刷新最近记录失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 强制刷新失败: {ex.Message}");
             }
         }
 
@@ -691,6 +1102,16 @@ namespace ZebraPrinterMonitor.Forms
                     txtTemplateName.Text = template.Name;
                     txtTemplateContent.Text = template.Content;
                     cmbTemplateFormat.SelectedItem = template.Format.ToString();
+                    numFontSize.Value = template.FontSize;
+                    cmbFontName.SelectedItem = template.FontName;
+                    
+                    // 加载页眉页脚设置
+                    _showHeader = template.ShowHeader;
+                    _headerText = template.HeaderText;
+                    _headerImagePath = template.HeaderImagePath;
+                    _showFooter = template.ShowFooter;
+                    _footerText = template.FooterText;
+                    _footerImagePath = template.FooterImagePath;
                     
                     // 确保保存按钮可用
                     btnSaveTemplate.Enabled = true;
@@ -787,7 +1208,15 @@ namespace ZebraPrinterMonitor.Forms
                     Name = txtTemplateName.Text,
                     Content = txtTemplateContent.Text,
                     Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.Text),
-                    IsDefault = false
+                    IsDefault = false,
+                    FontSize = (int)numFontSize.Value,
+                    FontName = cmbFontName.SelectedItem?.ToString() ?? "Arial",
+                    ShowHeader = _showHeader,
+                    HeaderText = _headerText,
+                    HeaderImagePath = _headerImagePath,
+                    ShowFooter = _showFooter,
+                    FooterText = _footerText,
+                    FooterImagePath = _footerImagePath
                 };
 
                 // 如果是新模板或用户确认覆盖现有模板
@@ -838,11 +1267,22 @@ namespace ZebraPrinterMonitor.Forms
                 {
                     Name = txtTemplateName.Text,
                     Content = txtTemplateContent.Text,
-                    Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text")
+                    Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text"),
+                    FontSize = (int)numFontSize.Value,
+                    FontName = cmbFontName.SelectedItem?.ToString() ?? "Arial",
+                    ShowHeader = _showHeader,
+                    HeaderText = _headerText,
+                    HeaderImagePath = _headerImagePath,
+                    ShowFooter = _showFooter,
+                    FooterText = _footerText,
+                    FooterImagePath = _footerImagePath
                 };
 
                 var preview = PrintTemplateManager.ProcessTemplate(template, record);
                 rtbTemplatePreview.Text = preview;
+                
+                // 设置预览的字体大小和名称
+                rtbTemplatePreview.Font = new Font(template.FontName, template.FontSize);
             }
             else
             {
@@ -865,6 +1305,40 @@ namespace ZebraPrinterMonitor.Forms
                 // 设置光标位置到插入字段的末尾
                 txtTemplateContent.SelectionStart = cursorPosition + field.Length;
                 txtTemplateContent.Focus();
+            }
+        }
+
+        private void btnHeaderFooterSettings_Click(object? sender, EventArgs e)
+        {
+            // 创建包含当前页眉页脚设置的模板对象
+            var currentTemplate = new PrintTemplate
+            {
+                Name = txtTemplateName.Text,
+                Content = txtTemplateContent.Text,
+                Format = Enum.Parse<PrintFormat>(cmbTemplateFormat.SelectedItem?.ToString() ?? "Text"),
+                FontSize = (int)numFontSize.Value,
+                FontName = cmbFontName.SelectedItem?.ToString() ?? "Arial",
+                ShowHeader = _showHeader,
+                HeaderText = _headerText,
+                HeaderImagePath = _headerImagePath,
+                ShowFooter = _showFooter,
+                FooterText = _footerText,
+                FooterImagePath = _footerImagePath
+            };
+
+            using var headerFooterForm = new HeaderFooterSettingsForm(currentTemplate);
+            if (headerFooterForm.ShowDialog() == DialogResult.OK)
+            {
+                // 更新主窗体中的页眉页脚设置
+                _showHeader = currentTemplate.ShowHeader;
+                _headerText = currentTemplate.HeaderText;
+                _headerImagePath = currentTemplate.HeaderImagePath;
+                _showFooter = currentTemplate.ShowFooter;
+                _footerText = currentTemplate.FooterText;
+                _footerImagePath = currentTemplate.FooterImagePath;
+
+                MessageBox.Show("页眉页脚设置已更新，请保存模板以应用更改。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AddLogMessage($"页眉页脚设置已更新");
             }
         }
 
@@ -901,7 +1375,7 @@ namespace ZebraPrinterMonitor.Forms
         private void UpdateUILanguage()
         {
             // 更新主窗体标题
-            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.1.43";
+            this.Text = $"{LanguageManager.GetString("MainTitle")} v1.2.7 - 数据库查询简化修复版";
             
             // 更新选项卡标题
             if (tabControl1.TabPages.Count >= 4)
@@ -913,16 +1387,18 @@ namespace ZebraPrinterMonitor.Forms
             }
 
             // 更新ListView列标题
-            if (lvRecords.Columns.Count >= 8)
+            if (lvRecords.Columns.Count >= 10)
             {
-                lvRecords.Columns[0].Text = LanguageManager.GetString("SerialNumber");
-                lvRecords.Columns[1].Text = LanguageManager.GetString("TestDateTime");
-                lvRecords.Columns[2].Text = LanguageManager.GetString("Current");
-                lvRecords.Columns[3].Text = LanguageManager.GetString("Voltage");
-                lvRecords.Columns[4].Text = LanguageManager.GetString("VoltageVpm");
-                lvRecords.Columns[5].Text = LanguageManager.GetString("Power");
-                lvRecords.Columns[6].Text = LanguageManager.GetString("PrintCount");
-                lvRecords.Columns[7].Text = LanguageManager.GetString("Operation");
+                lvRecords.Columns[0].Text = LanguageManager.GetString("SerialNumber");      // 序列号
+                lvRecords.Columns[1].Text = LanguageManager.GetString("TestDateTime");      // 测试时间
+                lvRecords.Columns[2].Text = LanguageManager.GetString("Current");           // ISC
+                lvRecords.Columns[3].Text = LanguageManager.GetString("Voltage");           // VOC
+                lvRecords.Columns[4].Text = LanguageManager.GetString("Power");             // Pm
+                lvRecords.Columns[5].Text = LanguageManager.GetString("CurrentIpm");        // Ipm
+                lvRecords.Columns[6].Text = LanguageManager.GetString("VoltageVpm");        // Vpm
+                lvRecords.Columns[7].Text = LanguageManager.GetString("PrintCount");        // 打印次数
+                lvRecords.Columns[8].Text = LanguageManager.GetString("Operation");         // 操作
+                lvRecords.Columns[9].Text = LanguageManager.GetString("RecordID");          // 记录ID
             }
 
             // 更新按钮和标签文本
@@ -950,23 +1426,57 @@ namespace ZebraPrinterMonitor.Forms
                 
                 if (lvRecords.SelectedItems.Count > 0)
                 {
-                    // 使用选中的记录
+                    // 直接使用选中记录的Tag中存储的TestRecord对象
                     var selectedItem = lvRecords.SelectedItems[0];
-                    var serialNumber = selectedItem.SubItems[0].Text;
+                    recordToPreview = selectedItem.Tag as TestRecord;
                     
-                    // 从数据库获取完整记录
-                    var records = _databaseMonitor.GetRecentRecords(100);
-                    recordToPreview = records.FirstOrDefault(r => r.TR_SerialNum == serialNumber);
+                    if (recordToPreview != null)
+                    {
+                        Logger.Info($"使用选中的记录进行预览: TR_ID={recordToPreview.TR_ID}, 序列号={recordToPreview.TR_SerialNum}");
+                    }
+                    else
+                    {
+                        // 如果Tag为空，使用TR_ID（主键）查找记录
+                        var recordId = selectedItem.SubItems.Count > 8 ? selectedItem.SubItems[8].Text : null;
+                        
+                        if (!string.IsNullOrEmpty(recordId) && recordId != "N/A")
+                        {
+                            var records = _databaseMonitor.GetRecentRecords(100);
+                            recordToPreview = records.FirstOrDefault(r => r.TR_ID == recordId);
+                            Logger.Warning($"ListView项Tag为空，通过主键TR_ID查找记录: {recordId}");
+                        }
+                        else
+                        {
+                            Logger.Error("无法获取TR_ID，无法定位记录");
+                        }
+                    }
                 }
                 else if (lvRecords.Items.Count > 0)
                 {
                     // 使用最新记录
                     var latestItem = lvRecords.Items[0];
-                    var serialNumber = latestItem.SubItems[0].Text;
+                    recordToPreview = latestItem.Tag as TestRecord;
                     
-                    // 从数据库获取完整记录
-                    var records = _databaseMonitor.GetRecentRecords(100);
-                    recordToPreview = records.FirstOrDefault(r => r.TR_SerialNum == serialNumber);
+                    if (recordToPreview != null)
+                    {
+                        Logger.Info($"使用最新记录进行预览: TR_ID={recordToPreview.TR_ID}, 序列号={recordToPreview.TR_SerialNum}");
+                    }
+                    else
+                    {
+                        // 如果Tag为空，使用TR_ID（主键）查找最新记录
+                        var recordId = latestItem.SubItems.Count > 8 ? latestItem.SubItems[8].Text : null;
+                        
+                        if (!string.IsNullOrEmpty(recordId) && recordId != "N/A")
+                        {
+                            var records = _databaseMonitor.GetRecentRecords(100);
+                            recordToPreview = records.FirstOrDefault(r => r.TR_ID == recordId);
+                            Logger.Warning($"ListView项Tag为空，通过主键TR_ID查找最新记录: {recordId}");
+                        }
+                        else
+                        {
+                            Logger.Error("无法获取最新记录的TR_ID，无法定位记录");
+                        }
+                    }
                 }
                 
                 if (recordToPreview == null)
@@ -976,26 +1486,29 @@ namespace ZebraPrinterMonitor.Forms
                     return;
                 }
                 
-                // 创建或显示预览窗口
+                // 创建或更新预览窗口
                 if (_printPreviewForm == null || _printPreviewForm.IsDisposed)
                 {
                     _printPreviewForm = new PrintPreviewForm(recordToPreview, _printerService);
                     _printPreviewForm.PrintRequested += OnPrintPreviewRequested;
-                }
-                
-                // 加载记录和设置自动打印状态
-                _printPreviewForm.LoadRecord(recordToPreview);
-                _printPreviewForm.SetAutoPrintMode(chkAutoPrint.Checked);
-                
-                // 显示窗口
-                if (_printPreviewForm.Visible)
-                {
-                    _printPreviewForm.BringToFront();
-                    _printPreviewForm.RefreshPreview();
+                    _printPreviewForm.Show(this);
+                    Logger.Info("创建新的打印预览窗口");
                 }
                 else
                 {
-                    _printPreviewForm.Show(this);
+                    // 窗口已存在，更新记录数据
+                    _printPreviewForm.LoadRecord(recordToPreview);
+                    _printPreviewForm.SetAutoPrintMode(chkAutoPrint.Checked);
+                    
+                    if (!_printPreviewForm.Visible)
+                    {
+                        _printPreviewForm.Show(this);
+                    }
+                    else
+                    {
+                        _printPreviewForm.BringToFront();
+                    }
+                    Logger.Info("更新现有打印预览窗口的数据");
                 }
                 
                 Logger.Info($"打开打印预览窗口，序列号: {recordToPreview.TR_SerialNum}");
@@ -1021,6 +1534,46 @@ namespace ZebraPrinterMonitor.Forms
                     // 执行打印
                     btnManualPrint_Click(null, EventArgs.Empty);
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 🔧 修复打印预览窗口和弹窗冲突问题：弹出模态对话框前的处理
+        /// </summary>
+        private void HandlePreviewFormBeforeDialog()
+        {
+            try
+            {
+                if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && _printPreviewForm.Visible)
+                {
+                    // 临时将打印预览窗口设置为不可见，避免焦点冲突
+                    _printPreviewForm.Visible = false;
+                    Logger.Info("临时隐藏打印预览窗口以避免模态对话框冲突");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"处理打印预览窗口焦点时出错: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 🔧 修复打印预览窗口和弹窗冲突问题：模态对话框关闭后的处理
+        /// </summary>
+        private void HandlePreviewFormAfterDialog()
+        {
+            try
+            {
+                if (_printPreviewForm != null && !_printPreviewForm.IsDisposed && !_printPreviewForm.Visible)
+                {
+                    // 恢复打印预览窗口的显示
+                    _printPreviewForm.Show(this);
+                    Logger.Info("恢复打印预览窗口显示");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"恢复打印预览窗口显示时出错: {ex.Message}");
             }
         }
 
@@ -1109,32 +1662,35 @@ namespace ZebraPrinterMonitor.Forms
             Logger.Info("服务初始化完成");
         }
 
-        private void InitializeNotifyIcon()
+        /// <summary>
+        /// 初始化数据库监控服务
+        /// </summary>
+        private void InitializeDatabaseMonitor()
         {
-            _notifyIcon = new NotifyIcon
+            try
             {
-                Text = LanguageManager.GetString("MainTitle"),
-                Icon = SystemIcons.Application,
-                Visible = false
-            };
-            
-            var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add(LanguageManager.GetString("ShowMainWindow"), null, (s, e) => {
-                this.Show();
-                this.WindowState = FormWindowState.Normal;
-                this.BringToFront();
-            });
-            contextMenu.Items.Add(LanguageManager.GetString("ExitProgram"), null, (s, e) => {
-                Application.Exit();
-            });
-            
-            _notifyIcon.ContextMenuStrip = contextMenu;
-            _notifyIcon.DoubleClick += (s, e) => {
-                this.Show();
-                this.WindowState = FormWindowState.Normal;
-                this.BringToFront();
-            };
+                _databaseMonitor = new DatabaseMonitor();
+                
+                // 🔧 统一监控系统：订阅统一数据更新事件
+                _databaseMonitor.DataUpdated += OnDataUpdated;
+                
+                // 保持兼容性事件订阅
+                _databaseMonitor.NewRecordFound += OnNewRecordFound;
+                _databaseMonitor.StatusChanged += OnStatusChanged;
+                _databaseMonitor.MonitoringError += OnMonitoringError;
+                
+                Logger.Info("✅ 数据库监控服务初始化完成 - 统一监控系统");
+                AddLogMessage("✅ 数据库监控服务初始化完成 - 基于GetLastRecord的统一监控");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"❌ 数据库监控服务初始化失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 数据库监控服务初始化失败: {ex.Message}");
+            }
         }
+
+        // 旧的InitializeNotifyIcon方法已被SetupNotifyIcon替代
+        // 该方法使用更完整的图标加载逻辑和错误处理
 
         private void InitializeTimer()
         {
@@ -1243,6 +1799,200 @@ namespace ZebraPrinterMonitor.Forms
                 }
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void UpdatePrintCountColumnVisibility()
+        {
+            var printCountColumnIndex = 7; // 打印次数列的索引
+            var config = ConfigurationManager.Config;
+            
+            if (config.Database.EnablePrintCount)
+            {
+                // 显示打印次数列
+                if (this.lvRecords.Columns.Count > printCountColumnIndex)
+                {
+                    this.lvRecords.Columns[printCountColumnIndex].Width = 100;
+                }
+            }
+            else
+            {
+                // 隐藏打印次数列
+                if (this.lvRecords.Columns.Count > printCountColumnIndex)
+                {
+                    this.lvRecords.Columns[printCountColumnIndex].Width = 0;
+                }
+            }
+        }
+
+        private void UpdateCurrentPrintInfo(TestRecord? record = null, string source = "")
+        {
+            try
+            {
+                if (record != null)
+                {
+                    var printInfo = $"当前打印: 序列号 {record.TR_SerialNum ?? "N/A"} (来源: {source})";
+                    if (lblCurrentPrint != null)
+                    {
+                        lblCurrentPrint.Text = printInfo;
+                        lblCurrentPrint.ForeColor = Color.Green;
+                    }
+                    Logger.Info($"打印监控: {printInfo}");
+                }
+                else
+                {
+                    var printInfo = LanguageManager.GetString("CurrentPrintInfo");
+                    if (lblCurrentPrint != null)
+                    {
+                        lblCurrentPrint.Text = printInfo;
+                        lblCurrentPrint.ForeColor = Color.Blue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"更新当前打印信息失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 🔧 统一监控系统：处理统一数据更新事件
+        /// 基于GetLastRecord监控，一次性接收最后记录和50条记录列表
+        /// </summary>
+        private void OnDataUpdated(object? sender, DataUpdateEventArgs e)
+        {
+            // 确保在UI线程上执行
+            this.Invoke(new Action(() =>
+            {
+                try
+                {
+                    Logger.Info($"📋 统一数据更新事件: {e.UpdateType} - {e.ChangeDetails}");
+                    AddLogMessage($"📋 统一数据更新: {e.UpdateType} - {e.LastRecord.TR_SerialNum}");
+                    AddLogMessage($"📊 接收到 {e.RecentRecords.Count} 条最新记录");
+                    
+                    // 🔧 核心：基于统一监控数据，直接更新UI列表
+                    UpdateRecordsList(e.RecentRecords, e.LastRecord);
+                    
+                    // 更新状态显示
+                    UpdateStatusDisplay();
+                    
+                    // 🔧 新增：如果是记录更新（非初始化），执行自动打印
+                    if (e.UpdateType == "记录更新")
+                    {
+                        // 检查是否启用了自动打印功能
+                        if (chkAutoPrint.Checked)
+                        {
+                            AddLogMessage($"🖨️ 开始自动打印: {e.LastRecord.TR_SerialNum}");
+                            try
+                            {
+                                AutoPrintRecord(e.LastRecord);
+                                AddLogMessage($"✅ 自动打印完成: {e.LastRecord.TR_SerialNum}");
+                            }
+                            catch (Exception printEx)
+                            {
+                                Logger.Error($"自动打印失败: {printEx.Message}", printEx);
+                                AddLogMessage($"❌ 自动打印失败: {printEx.Message}");
+                            }
+                        }
+                        else
+                        {
+                            AddLogMessage($"⏸️ 自动打印已禁用，跳过打印: {e.LastRecord.TR_SerialNum}");
+                        }
+                        
+                        // 显示通知
+                        ShowNotification($"新记录检测", $"序列号: {e.LastRecord.TR_SerialNum} 已自动处理并高亮显示");
+                    }
+                    
+                    Logger.Info($"✅ 统一数据更新处理完成");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"❌ 统一数据更新处理失败: {ex.Message}", ex);
+                    AddLogMessage($"❌ 数据更新处理失败: {ex.Message}");
+                }
+            }));
+        }
+        
+        /// <summary>
+        /// 🔧 核心：基于统一监控数据更新记录列表
+        /// </summary>
+        private void UpdateRecordsList(List<TestRecord> records, TestRecord? highlightRecord = null)
+        {
+            try
+            {
+                lvRecords.Items.Clear();
+                
+                foreach (var record in records)
+                {
+                    var item = new ListViewItem(record.TR_SerialNum ?? "N/A");                          // 序列号
+                    item.SubItems.Add(record.TR_DateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A");   // 测试时间
+                    item.SubItems.Add(record.FormatNumber(record.TR_Isc));                              // ISC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Voc));                              // VOC
+                    item.SubItems.Add(record.FormatNumber(record.TR_Pm));                               // Pm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Ipm));                              // Ipm
+                    item.SubItems.Add(record.FormatNumber(record.TR_Vpm));                              // Vpm
+                    item.SubItems.Add((record.TR_Print ?? 0).ToString());                               // 打印次数
+                    item.SubItems.Add("双击打印");                                                       // 操作
+                    item.SubItems.Add(record.TR_ID ?? "N/A");                                           // 记录ID
+                    item.Tag = record;
+                    
+                    // 根据打印次数设置颜色（仅在启用打印次数统计时）
+                    var printConfig = ConfigurationManager.Config;
+                    if (printConfig.Database.EnablePrintCount && record.TR_Print > 0)
+                    {
+                        item.BackColor = Color.LightGray; // 已打印记录显示灰色
+                    }
+                    
+                    lvRecords.Items.Add(item);
+                }
+                
+                // 🔧 高亮最新记录（如果指定）
+                if (highlightRecord != null && lvRecords.Items.Count > 0)
+                {
+                    // 清除所有选择和高亮
+                    lvRecords.SelectedItems.Clear();
+                    foreach (ListViewItem item in lvRecords.Items)
+                    {
+                        if (item.BackColor != Color.LightGray) // 保持已打印记录的灰色
+                        {
+                            item.BackColor = Color.White;
+                        }
+                    }
+                    
+                    // 查找并高亮匹配的记录
+                    foreach (ListViewItem item in lvRecords.Items)
+                    {
+                        if (item.Tag is TestRecord record && 
+                            record.TR_SerialNum == highlightRecord.TR_SerialNum)
+                        {
+                            item.Selected = true;
+                            item.Focused = true;
+                            item.BackColor = Color.LightYellow; // 淡黄色高亮显示新记录
+                            item.EnsureVisible(); // 确保滚动到可见位置
+                            
+                            AddLogMessage("🌟 新记录已高亮显示并滚动到可见位置");
+                            break;
+                        }
+                    }
+                }
+                
+                AddLogMessage($"📊 记录列表已更新，共 {records.Count} 条记录");
+                
+                // 显示最后记录的序列号
+                if (records.Count > 0)
+                {
+                    var lastRecord = records[0]; // 第一条是最新的
+                    lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: {lastRecord.TR_SerialNum ?? "N/A"}";
+                }
+                else
+                {
+                    lblLastRecord.Text = $"{LanguageManager.GetString("LastRecord")}: N/A";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"❌ 更新记录列表失败: {ex.Message}", ex);
+                AddLogMessage($"❌ 更新记录列表失败: {ex.Message}");
+            }
         }
 
         protected override void Dispose(bool disposing)

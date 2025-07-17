@@ -16,6 +16,16 @@ namespace ZebraPrinterMonitor.Forms
         private ListBox _fieldListBox;
         private TextBox _templateNameTextBox;
         private ComboBox _formatComboBox;
+        private NumericUpDown _fontSizeNumeric;
+        private ComboBox _fontNameComboBox;
+        private CheckBox _showHeaderCheckBox;
+        private CheckBox _showFooterCheckBox;
+        private TextBox _headerTextTextBox;
+        private TextBox _footerTextTextBox;
+        private TextBox _headerImageTextBox;
+        private TextBox _footerImageTextBox;
+        private Button _browseHeaderImageButton;
+        private Button _browseFooterImageButton;
         private Button _saveButton;
         private Button _previewButton;
         private TextBox _customTextBox;
@@ -103,17 +113,56 @@ namespace ZebraPrinterMonitor.Forms
             _formatComboBox.Items.AddRange(new[] { "Text", "ZPL", "Code128", "QRCode" });
             _formatComboBox.SelectedIndex = 0;
             
+            // 字体大小设置
+            var fontSizeLabel = new Label 
+            { 
+                Text = "字体大小:", 
+                Location = new Point(530, 20),
+                Size = new Size(70, 23),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            
+            _fontSizeNumeric = new NumericUpDown 
+            { 
+                Location = new Point(610, 17),
+                Size = new Size(60, 23),
+                Minimum = 6,
+                Maximum = 72,
+                Value = 10
+            };
+            
+            // 字体名称设置
+            var fontNameLabel = new Label 
+            { 
+                Text = "字体:", 
+                Location = new Point(690, 20),
+                Size = new Size(50, 23),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            
+            _fontNameComboBox = new ComboBox 
+            { 
+                Location = new Point(740, 17),
+                Size = new Size(150, 23),
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            
+            // 填充系统字体
+            var systemFonts = PrinterService.GetSystemFonts();
+            _fontNameComboBox.Items.AddRange(systemFonts.ToArray());
+            _fontNameComboBox.SelectedItem = "Arial";
+            
             // 操作说明
             var instructionLabel = new Label
             {
                 Text = LanguageManager.GetString("DesignInstructions"),
-                Location = new Point(530, 15),
-                Size = new Size(650, 30),
+                Location = new Point(910, 15),
+                Size = new Size(270, 30),
                 ForeColor = Color.DarkBlue,
                 Font = new Font("Microsoft YaHei", 8.5F)
             };
             
-            topToolbar.Controls.AddRange(new Control[] { nameLabel, _templateNameTextBox, formatLabel, _formatComboBox, instructionLabel });
+            topToolbar.Controls.AddRange(new Control[] { nameLabel, _templateNameTextBox, formatLabel, _formatComboBox, fontSizeLabel, _fontSizeNumeric, fontNameLabel, _fontNameComboBox, instructionLabel });
             
             // 中间内容区域
             var contentPanel = new Panel
@@ -234,22 +283,110 @@ namespace ZebraPrinterMonitor.Forms
             
             var propertiesGroupBox = new GroupBox 
             { 
-                Text = LanguageManager.GetString("TemplateProperties"), 
+                Text = "页眉页脚设置", 
                 Dock = DockStyle.Top,
-                Height = 200,
+                Height = 350,
                 Padding = new Padding(10)
             };
             
-            // 预览文本框
-            _previewTextBox = new RichTextBox
+            // 页眉设置
+            _showHeaderCheckBox = new CheckBox
             {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                Font = new Font("Consolas", 9F),
-                BackColor = Color.FromArgb(248, 249, 250)
+                Text = "显示页眉",
+                Location = new Point(10, 25),
+                Size = new Size(100, 23)
             };
             
-            propertiesGroupBox.Controls.Add(_previewTextBox);
+            var headerTextLabel = new Label
+            {
+                Text = "页眉文本:",
+                Location = new Point(10, 55),
+                Size = new Size(70, 23)
+            };
+            
+            _headerTextTextBox = new TextBox
+            {
+                Location = new Point(85, 52),
+                Size = new Size(170, 23),
+                PlaceholderText = "输入页眉文本"
+            };
+            
+            var headerImageLabel = new Label
+            {
+                Text = "页眉图片:",
+                Location = new Point(10, 85),
+                Size = new Size(70, 23)
+            };
+            
+            _headerImageTextBox = new TextBox
+            {
+                Location = new Point(85, 82),
+                Size = new Size(120, 23),
+                ReadOnly = true,
+                PlaceholderText = "选择图片文件"
+            };
+            
+            _browseHeaderImageButton = new Button
+            {
+                Text = "浏览",
+                Location = new Point(210, 81),
+                Size = new Size(45, 25)
+            };
+            
+            // 页脚设置
+            _showFooterCheckBox = new CheckBox
+            {
+                Text = "显示页脚",
+                Location = new Point(10, 120),
+                Size = new Size(100, 23)
+            };
+            
+            var footerTextLabel = new Label
+            {
+                Text = "页脚文本:",
+                Location = new Point(10, 150),
+                Size = new Size(70, 23)
+            };
+            
+            _footerTextTextBox = new TextBox
+            {
+                Location = new Point(85, 147),
+                Size = new Size(170, 23),
+                PlaceholderText = "输入页脚文本"
+            };
+            
+            var footerImageLabel = new Label
+            {
+                Text = "页脚图片:",
+                Location = new Point(10, 180),
+                Size = new Size(70, 23)
+            };
+            
+            _footerImageTextBox = new TextBox
+            {
+                Location = new Point(85, 177),
+                Size = new Size(120, 23),
+                ReadOnly = true,
+                PlaceholderText = "选择图片文件"
+            };
+            
+            _browseFooterImageButton = new Button
+            {
+                Text = "浏览",
+                Location = new Point(210, 176),
+                Size = new Size(45, 25)
+            };
+            
+            // 绑定事件
+            _browseHeaderImageButton.Click += BrowseHeaderImage_Click;
+            _browseFooterImageButton.Click += BrowseFooterImage_Click;
+            
+            propertiesGroupBox.Controls.AddRange(new Control[] {
+                _showHeaderCheckBox, headerTextLabel, _headerTextTextBox, 
+                headerImageLabel, _headerImageTextBox, _browseHeaderImageButton,
+                _showFooterCheckBox, footerTextLabel, _footerTextTextBox,
+                footerImageLabel, _footerImageTextBox, _browseFooterImageButton
+            });
             
             // 预览组
             var previewGroupBox = new GroupBox 
@@ -260,16 +397,22 @@ namespace ZebraPrinterMonitor.Forms
                 Margin = new Padding(0, 10, 0, 0)
             };
             
-            var previewContent = new RichTextBox
+            _previewTextBox = new RichTextBox
             {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 Font = new Font("Consolas", 9F),
                 Text = LanguageManager.GetString("LoadingContent"),
-                BackColor = Color.FromArgb(248, 249, 250)
+                BackColor = Color.FromArgb(248, 249, 250),
+                // 🔧 修复模板预览文字遮挡问题：优化显示设置
+                WordWrap = true,                    // 启用自动换行
+                ScrollBars = RichTextBoxScrollBars.Both, // 添加滚动条
+                DetectUrls = false,                 // 禁用URL检测，提高性能
+                Multiline = true,                   // 确保多行显示
+                AcceptsTab = false                  // 禁用Tab键输入
             };
             
-            previewGroupBox.Controls.Add(previewContent);
+            previewGroupBox.Controls.Add(_previewTextBox);
             
             rightPanel.Controls.AddRange(new Control[] { previewGroupBox, propertiesGroupBox });
             
@@ -376,6 +519,16 @@ namespace ZebraPrinterMonitor.Forms
         {
             _templateNameTextBox.Text = _currentTemplate.Name;
             _formatComboBox.SelectedItem = _currentTemplate.Format.ToString();
+            _fontSizeNumeric.Value = _currentTemplate.FontSize;
+            _fontNameComboBox.SelectedItem = _currentTemplate.FontName;
+            
+            // 加载页眉页脚设置
+            _showHeaderCheckBox.Checked = _currentTemplate.ShowHeader;
+            _headerTextTextBox.Text = _currentTemplate.HeaderText;
+            _headerImageTextBox.Text = _currentTemplate.HeaderImagePath;
+            _showFooterCheckBox.Checked = _currentTemplate.ShowFooter;
+            _footerTextTextBox.Text = _currentTemplate.FooterText;
+            _footerImageTextBox.Text = _currentTemplate.FooterImagePath;
             
             // 清空现有控件
             ClearButton_Click(null, EventArgs.Empty);
@@ -389,25 +542,35 @@ namespace ZebraPrinterMonitor.Forms
 
         private void ParseAndCreateFieldControls(string content)
         {
-            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            // 🔧 修复文字遮挡问题：改进换行符处理和行高计算
+            var lines = content.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None); // 保留空行
             int yOffset = 20;
-            int lineHeight = 40;
+            int lineHeight = 50; // 🔧 增加行高，避免控件重叠
             
             foreach (var line in lines)
             {
-                var trimmedLine = line.Trim();
-                if (string.IsNullOrEmpty(trimmedLine))
+                // 🔧 保留空行和空白行，不过滤掉
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    // 空行也占用垂直空间
+                    yOffset += Math.Max(lineHeight / 2, 25); // 空行占用一半行高，最少25像素
                     continue;
+                }
                 
-                // 简化解析逻辑：按行处理，每行创建一个控件
-                ProcessLine(trimmedLine, yOffset);
-                yOffset += lineHeight;
+                var trimmedLine = line.Trim();
+                if (!string.IsNullOrEmpty(trimmedLine))
+                {
+                    // 简化解析逻辑：按行处理，每行创建一个控件
+                    ProcessLine(trimmedLine, yOffset);
+                    yOffset += lineHeight; // 🔧 每行都增加足够的间距
+                }
             }
         }
 
         private void ProcessLine(string line, int yOffset)
         {
             int xOffset = 20;
+            const int minControlSpacing = 15; // 🔧 最小控件间距
             
             // 查找所有字段变量
             var fieldMatches = System.Text.RegularExpressions.Regex.Matches(line, @"\{[^}]+\}");
@@ -431,7 +594,7 @@ namespace ZebraPrinterMonitor.Forms
                     if (!string.IsNullOrEmpty(beforeText.Trim()))
                     {
                         CreateFieldControl(beforeText, new Point(xOffset, yOffset), true);
-                        xOffset += GetTextWidth(beforeText) + 10;
+                        xOffset += GetTextWidth(beforeText) + minControlSpacing; // 🔧 使用最小间距
                     }
                 }
                 
@@ -440,13 +603,13 @@ namespace ZebraPrinterMonitor.Forms
                 if (_availableFields.ContainsKey(fieldKey))
                 {
                     CreateFieldControl(fieldKey, new Point(xOffset, yOffset), false);
-                    xOffset += GetTextWidth(_availableFields[fieldKey]) + 10;
+                    xOffset += GetTextWidth(_availableFields[fieldKey]) + minControlSpacing; // 🔧 使用最小间距
                 }
                 else
                 {
                     // 未知字段，作为自定义文本处理
                     CreateFieldControl(fieldKey, new Point(xOffset, yOffset), true);
-                    xOffset += GetTextWidth(fieldKey) + 10;
+                    xOffset += GetTextWidth(fieldKey) + minControlSpacing; // 🔧 使用最小间距
                 }
                 
                 lastIndex = match.Index + match.Length;
@@ -465,8 +628,36 @@ namespace ZebraPrinterMonitor.Forms
 
         private int GetTextWidth(string text)
         {
-            // 估算文本宽度（可以根据字体大小调整）
-            return text.Length * 12; // 假设每个字符宽度为12像素
+            // 🔧 改进文本宽度计算，考虑字体大小和类型
+            if (string.IsNullOrEmpty(text))
+                return 0;
+                
+            // 使用Graphics.MeasureString进行更准确的测量
+            try
+            {
+                using (var graphics = _designPanel.CreateGraphics())
+                {
+                    var font = new Font("Arial", 9F); // 默认字体大小
+                    var size = graphics.MeasureString(text, font);
+                    return (int)Math.Ceiling(size.Width) + 10; // 额外增加10像素边距
+                }
+            }
+            catch
+            {
+                // 如果测量失败，使用改进的估算方法
+                // 考虑中文字符占用更多空间
+                int charWidth = 8; // 基础字符宽度
+                int chineseCharCount = 0;
+                
+                foreach (char c in text)
+                {
+                    if (c > 127) // 非ASCII字符（包括中文）
+                        chineseCharCount++;
+                }
+                
+                // 中文字符占用更多空间
+                return (text.Length - chineseCharCount) * charWidth + chineseCharCount * (charWidth * 2) + 20;
+            }
         }
 
         private void FieldListBox_MouseDown(object sender, MouseEventArgs e)
@@ -684,6 +875,9 @@ namespace ZebraPrinterMonitor.Forms
                 // 处理模板并显示预览
                 var preview = PrintTemplateManager.ProcessTemplate(template, sampleRecord);
                 _previewTextBox.Text = preview;
+                
+                // 设置预览的字体大小
+                _previewTextBox.Font = new Font(_previewTextBox.Font.FontFamily, template.FontSize);
             }
             catch (Exception ex)
             {
@@ -697,7 +891,15 @@ namespace ZebraPrinterMonitor.Forms
             {
                 Name = _templateNameTextBox.Text,
                 Format = Enum.Parse<PrintFormat>(_formatComboBox.SelectedItem.ToString()),
-                Content = GenerateContentFromFields()
+                Content = GenerateContentFromFields(),
+                FontSize = (int)_fontSizeNumeric.Value,
+                FontName = _fontNameComboBox.SelectedItem?.ToString() ?? "Arial",
+                ShowHeader = _showHeaderCheckBox.Checked,
+                HeaderText = _headerTextTextBox.Text,
+                HeaderImagePath = _headerImageTextBox.Text,
+                ShowFooter = _showFooterCheckBox.Checked,
+                FooterText = _footerTextTextBox.Text,
+                FooterImagePath = _footerImageTextBox.Text
             };
 
             return template;
@@ -831,6 +1033,36 @@ namespace ZebraPrinterMonitor.Forms
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
+        }
+
+        private void BrowseHeaderImage_Click(object? sender, EventArgs e)
+        {
+            using var openFileDialog = new OpenFileDialog
+            {
+                Title = "选择页眉图片",
+                Filter = "图片文件|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件|*.*",
+                RestoreDirectory = true
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                _headerImageTextBox.Text = openFileDialog.FileName;
+            }
+        }
+
+        private void BrowseFooterImage_Click(object? sender, EventArgs e)
+        {
+            using var openFileDialog = new OpenFileDialog
+            {
+                Title = "选择页脚图片",
+                Filter = "图片文件|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件|*.*",
+                RestoreDirectory = true
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                _footerImageTextBox.Text = openFileDialog.FileName;
+            }
         }
 
         private void AddCustomText_Click(object? sender, EventArgs e)
